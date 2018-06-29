@@ -1,0 +1,7 @@
+.document-item:hover {
+    background-color: lightgray;
+}
+
+.active-document {
+    background: lightgray;
+}

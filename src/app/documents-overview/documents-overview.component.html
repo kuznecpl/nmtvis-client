@@ -1,0 +1,27 @@
+<mat-sidenav-container class="example-container">
+    <mat-sidenav mode="side" opened style="min-width: 200px;">
+        <mat-list>
+            <mat-divider></mat-divider>
+            <div *ngFor="let document of documents;">
+                <mat-list-item [ngClass]="{'active-document': selectedDocument == document}" class="document-item"
+                               (click)="onClick(document)"> {{
+                    document.name }}
+                </mat-list-item>
+                <mat-divider></mat-divider>
+            </div>
+        </mat-list>
+    </mat-sidenav>
+    <mat-sidenav-content>
+        <mat-card class="example-card" *ngIf="selectedDocument">
+            <h2> {{selectedDocument.name}}</h2>
+            <mat-card-content>
+                <div *ngFor="let sentence of selectedDocument.sentences(); let i = index;">
+                    <a [routerLink]="['/document', selectedDocument.id, 'sentence', i]">
+                        {{ sentence }}
+                    </a>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </mat-sidenav-content>
+</mat-sidenav-container>
+

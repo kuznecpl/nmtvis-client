@@ -1,1 +1,48 @@
 /* You can add global styles to this file, and also import other style files */
+@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+
+body {
+    margin: 0px;
+}
+
+.node circle {
+    fill: #fff;
+    stroke: white;
+    stroke-width: 3px;
+}
+
+.node text {
+    font: 12px sans-serif;
+}
+
+.link {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 2px;
+}
+
+circle:hover {
+    stroke: red;
+}
+
+.example-full-width {
+    min-width: 500px;
+}
+
+.example-fill-remaining-space {
+    /* This fills the remaining space, by using flexbox.
+       Every toolbar row uses a flexbox row layout. */
+    flex: 1 1 auto;
+}
+
+.example-card {
+    margin: auto;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left:10px;
+    margin-right: 10px;
+}
+
+.example-container {
+    height: 1000px;
+}
