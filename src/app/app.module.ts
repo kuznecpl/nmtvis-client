@@ -14,10 +14,16 @@ import {MatListModule} from '@angular/material/list';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatInputModule} from '@angular/material/input';
+import {MatGridListModule} from '@angular/material/grid-list';
+import {MatDialogModule} from '@angular/material/dialog';
+import {MatFileUploadModule} from 'angular-material-fileupload';
 
 import {AppComponent} from './app.component';
 import {DocumentsOverviewComponent} from './documents-overview/documents-overview.component';
 import {SentenceViewComponent} from './sentence-view/sentence-view.component';
+import {BeamNodeDialog} from './sentence-view/sentence-view.component';
+import {DocumentService} from './document.service';
+import {SentencesVisComponent} from './documents-overview/sentences-vis/sentences-vis.component';
 
 
 const appRoutes: Routes = [
@@ -29,18 +35,21 @@ const appRoutes: Routes = [
     declarations: [
         AppComponent,
         DocumentsOverviewComponent,
-        SentenceViewComponent
+        SentenceViewComponent, BeamNodeDialog, SentencesVisComponent
     ],
     imports: [
         BrowserModule, HttpClientModule, FormsModule, BrowserAnimationsModule,
         MatButtonModule, MatToolbarModule, MatInputModule, MatProgressSpinnerModule,
         MatIconModule, MatCardModule, MatSidenavModule, MatListModule, MatDividerModule,
-        MatSliderModule, MatInputModule,
+        MatSliderModule, MatInputModule, MatGridListModule, MatDialogModule, MatFileUploadModule,
         RouterModule.forRoot(
             appRoutes, // <-- debugging purposes only
         )
     ],
-    providers: [],
+    entryComponents: [
+        BeamNodeDialog
+    ],
+    providers: [DocumentService],
     bootstrap: [AppComponent]
 })
 export class AppModule {

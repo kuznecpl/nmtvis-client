@@ -26,7 +26,8 @@
     "core-js": "^2.5.7",
     "d3": "^5.5.0",
     "rxjs": "^5.5.11",
-    "zone.js": "^0.8.19"
+    "zone.js": "^0.8.19",
+    "angular-material-fileupload": "^0.0.11"
   },
   "devDependencies": {
     "@angular/cli": "~1.7.4",

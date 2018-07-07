@@ -1,6 +1,12 @@
 <mat-sidenav-container class="example-container">
     <mat-sidenav mode="side" opened style="min-width: 200px;">
         <mat-list>
+            <form class="translation-form" style="padding-bottom: 10px; padding-left: 5px; padding-right: 5px;">
+                <button style="width: 100%;" type="button" (click)="docUploadInput.click()" mat-raised-button
+                        color="accent">Upload
+                    Document
+                </button>
+            </form>
             <mat-divider></mat-divider>
             <div *ngFor="let document of documents;">
                 <mat-list-item [ngClass]="{'active-document': selectedDocument == document}" class="document-item"
@@ -12,15 +18,33 @@
         </mat-list>
     </mat-sidenav>
     <mat-sidenav-content>
+        <input hidden #docUploadInput id="singleFile" type="file" [fileUploadInputFor]="fileUploadQueue"/>
+        <br>
+        <div style="max-width: 500px;margin-left: 300px;">
+            <mat-form-field style="width: 300px;">
+                <input matInput [(ngModel)]="newDocumentName" type="text"
+                       name="newDocumentName"
+                       placeholder="Document Name">
+            </mat-form-field>
+            <mat-file-upload-queue #fileUploadQueue
+                                   [fileAlias]="'file'"
+                                   [httpUrl]="uri"
+                                   [httpRequestHeaders]="{}">
+
+                <mat-file-upload [file]="file" [id]="i"
+                                 *ngFor="let file of fileUploadQueue.files; let i = index"></mat-file-upload>
+            </mat-file-upload-queue>
+        </div>
         <mat-card class="example-card" *ngIf="selectedDocument">
             <h2> {{selectedDocument.name}}</h2>
             <mat-card-content>
-                <div *ngFor="let sentence of selectedDocument.sentences(); let i = index;">
+                <div *ngFor="let sentence of selectedDocument.content; let i = index;">
                     <a [routerLink]="['/document', selectedDocument.id, 'sentence', i]">
-                        {{ sentence }}
+                        {{ (sentence.length>50)? (sentence | slice:0:50)+'..':(sentence) }}
                     </a>
                 </div>
             </mat-card-content>
+            <app-sentences-vis [sentences]="selectedDocument.content"></app-sentences-vis>
         </mat-card>
     </mat-sidenav-content>
 </mat-sidenav-container>

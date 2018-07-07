@@ -1,8 +1,10 @@
 export class Document {
     constructor(readonly id: string, readonly name: string, readonly content: string) {
     }
+}
 
-    sentences() {
-        return this.content.match( /[^\.!\?]+[\.!\?]+/g );
+export class Sentence {
+    constructor(readonly inputSentence: string, readonly translation: string,
+                readonly attention: number[][], readonly beam: any) {
     }
 }

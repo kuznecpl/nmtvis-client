@@ -1,5 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {Document} from './document';
+import {DocumentService} from '../document.service';
 
 @Component({
     selector: 'app-documents-overview',
@@ -8,16 +9,25 @@ import {Document} from './document';
 })
 export class DocumentsOverviewComponent implements OnInit {
 
-    documents = [new Document("1", "Dokument 1", "Das ist der Inhalt. Er ist sehr gut!"),
-        new Document("2", "Dokument 2", "Ein Satz.")];
+    documents = [];
     selectedDocument;
+    newDocumentName;
+    httpUri = "http://46.101.224.19:5000/upload";
 
-    constructor() {
+    constructor(readonly documentService: DocumentService) {
+        this.documentService.getDocuments()
+            .subscribe(documents => this.documents = documents);
+    }
+
+    get uri() {
+        return this.httpUri + "?document_name=" + this.newDocumentName;
+    }
+
+    OnInit() {
     }
 
     onClick(document) {
         this.selectedDocument = document;
-        console.log(document);
     }
 
     ngOnInit() {

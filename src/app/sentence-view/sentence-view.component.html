@@ -1,73 +1,56 @@
 <mat-sidenav-container class="example-container">
-  <mat-sidenav mode="side" opened>
-    <mat-selection-list>
-      <mat-list-option [selected]="true">
-        OpenNMT-py
-      </mat-list-option>
-      <mat-divider></mat-divider>
-      <mat-list-option>
-        Tensorflow seq2seq
-      </mat-list-option>
-      <mat-divider></mat-divider>
-    </mat-selection-list>
-  </mat-sidenav>
-  <mat-sidenav-content>
-    <form class="translation-form">
-      <mat-form-field class="example-full-width">
-        <input name="first" [(ngModel)]="inputSentence" matInput placeholder="German Sentence" value="">
-      </mat-form-field>
-      <button type="button" (click)="onClick()" mat-raised-button color="primary">Translate</button>
-      <mat-progress-spinner *ngIf="loading" style="margin:auto;width:10px;height:10px;"
-                            class="example-margin"
-                            color="primary"
-                            [diameter]="40"
-                            mode="indeterminate">
-      </mat-progress-spinner>
-    </form>
-    <mat-card *ngIf="haveContent" class="example-card">
-      <div style="margin-bottom: 20px;">
-        <span class="translation-label">Translation:</span>
-        <span (mouseenter)="mouseEnter(i)" class="word"
-              *ngFor="let word of translation; let i = index">{{ word }}</span>
-      </div>
-      <div style="margin-bottom: 20px;">
-        <span class="translation-label">Original:</span>
-        <span class="translated-word" [style.background-color]="getColor(i)" id="word-{{i}}"
-              *ngFor="let word of sentence; let i = index">{{ word }}</span>
-      </div>
-    </mat-card>
-    <div *ngIf="haveContent">
-      <mat-card class="example-card">
-        <h2>Attention Matrix</h2>
-        <img [attr.src]="heatmap">
-        <mat-card-content>
-        </mat-card-content>
-      </mat-card>
-    </div>
-    <mat-card class="example-card">
-      <h2>Beam Search</h2>
-      <div>
-        <form class="example-form">
-          <mat-form-field class="min-width: 50px;">
-            <input matInput (change)="beamSizeChange($event)" type="number" value="3" min="1" max="10"
-                   placeholder="Beam Size">
-          </mat-form-field>
+    <mat-sidenav-content>
+        <form class="translation-form">
+            <mat-form-field class="example-full-width">
+                <input name="first" [(ngModel)]="inputSentence" matInput placeholder="German Sentence" value="">
+            </mat-form-field>
+            <button type="button" (click)="onClick()" mat-raised-button color="primary">Translate</button>
+            <mat-progress-spinner *ngIf="loading" style="margin:auto;width:10px;height:10px;"
+                                  class="example-margin"
+                                  color="primary"
+                                  [diameter]="40"
+                                  mode="indeterminate">
+            </mat-progress-spinner>
         </form>
-      </div>
-      <div id="tree"></div>
-      <h3>Adjust weights</h3>
-      <div *ngIf="partial"> Partial Translation: <span style="font-weight: bold;">{{ partial }} </span></div>
 
-      <div style="padding-left: 250px;text-align: left" *ngFor="let word of sentence;let i = index">
-        <div style="display: inline-block; min-width: 50px; font-weight: bold;">{{ word }}</div>
-        <mat-slider min="0" max="1" step="0.01" (change)="attentionChange($event, i)"
-                    [(ngModel)]="beamAttention[i]"></mat-slider>
-      </div>
 
-      <form class="change-attention">
-        <button type="button" (click)="onAttentionChange()" mat-raised-button color="primary">Apply</button>
-      </form>
-    </mat-card>
-  </mat-sidenav-content>
+        <div id="translation-box">
+
+        </div>
+        <div *ngIf="showAttentionMatrix" id="attention-matrix">
+
+        </div>
+
+        <div>
+            <h2>Beam Search</h2>
+            <div>
+                <form class="example-form">
+                    <mat-form-field class="min-width: 50px;">
+                        <input matInput [(ngModel)]="beamSize" (change)="beamSizeChange($event)" type="number"
+                               name="beamSize"
+                               value="3" min="1"
+                               max="10"
+                               placeholder="Beam Size">
+                    </mat-form-field>
+                </form>
+            </div>
+            <div id="tree"></div>
+            <h3>Adjust weights</h3>
+            <div *ngIf="partial"> Partial Translation: <span style="font-weight: bold;">{{ partial }} </span>
+            </div>
+
+            <div style="padding-left: 700px;text-align: left" *ngFor="let word of sentence;let i = index">
+                <div style="display: inline-block; min-width: 50px; font-weight: bold;">{{ word }}</div>
+                <mat-slider min="0" max="1" step="0.01" (change)="attentionChange($event, i)"
+                            [(ngModel)]="beamAttention[i]"></mat-slider>
+            </div>
+
+            <form class="change-attention">
+                <button type="button" (click)="onAttentionChange()" mat-raised-button color="primary">Apply
+                </button>
+            </form>
+        </div>
+
+    </mat-sidenav-content>
 </mat-sidenav-container>
 
