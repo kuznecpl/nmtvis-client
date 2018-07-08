@@ -22,15 +22,17 @@
         </div>
 
         <div>
-            <h2>Beam Search</h2>
             <div>
                 <form class="example-form">
-                    <mat-form-field class="min-width: 50px;">
+                    <span style="font-weight: bold;margin-right: 30px;">Beam Search</span>
+                    <span style="font-weight: bold">Size</span>
+                    <mat-form-field style="width: 50px;">
                         <input matInput [(ngModel)]="beamSize" (change)="beamSizeChange($event)" type="number"
                                name="beamSize"
                                value="3" min="1"
                                max="10"
-                               placeholder="Beam Size">
+                               placeholder=""
+                               style="text-align:center;">
                     </mat-form-field>
                 </form>
             </div>

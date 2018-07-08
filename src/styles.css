@@ -21,8 +21,21 @@ body {
     stroke-width: 2px;
 }
 
+.golden-link {
+    fill: none;
+    stroke: #ffcc00;
+    stroke-width: 4px;
+}
+
+.candidate-link {
+    fill: none;
+    stroke: #ccc;
+    stroke-dasharray: 4px;
+    stroke-width: 3px;
+}
+
 circle:hover {
-    stroke: gray;
+    stroke: lightgray;
 }
 
 .example-full-width {
@@ -39,7 +52,7 @@ circle:hover {
     margin: auto;
     margin-top: 10px;
     margin-bottom: 10px;
-    margin-left:10px;
+    margin-left: 10px;
     margin-right: 10px;
 }
 
