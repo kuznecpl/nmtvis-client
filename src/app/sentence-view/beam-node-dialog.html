@@ -1,5 +1,5 @@
 <h2 mat-dialog-title style="text-align: center;">Adjust weights</h2>
-<div *ngIf=" data.partial"> Partial Translation: <span style="font-weight: bold;">{{ data.partial }} </span>
+<div *ngIf="data.partial"> Partial Translation: <span style="font-weight: bold;">{{ data.partial }} </span>
 </div>
 
 <mat-form-field style="width:100%;">
@@ -7,13 +7,15 @@
            placeholder="Correction">
 </mat-form-field>
 <div style="text-align: center; font-weight: bold">OR</div>
-<div style="padding-left: 50px;text-align: left" *ngFor="let word of data.sentence;let i = index">
+<div style="padding-left: 50px;text-align: left;font-size: 12px; max-height: 25px;"
+     *ngFor="let word of data.sentence;let i = index">
     <div style="display: inline-block; min-width: 50px; font-weight: bold;">{{ word }}</div>
     <mat-slider min="0" max="1" step="0.01" (change)="attentionChange($event, i)"
-                [(ngModel)]="beamAttention[i]"></mat-slider>
+                [(ngModel)]="shownValues[i]"></mat-slider>
+    {{ ((beamAttention[i] * 100) | number:'1.0-2') + '%'}}
 </div>
 
-<form class="change-attention" style="text-align:center;">
+<form class="change-attention" style="text-align:center;padding-top: 20px;">
     <button [mat-dialog-close]="data" type="button" (click)="onAttentionChange()" mat-raised-button
             color="primary">Apply
     </button>

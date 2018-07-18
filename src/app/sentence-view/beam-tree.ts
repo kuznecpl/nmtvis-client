@@ -14,9 +14,10 @@ export class BeamTree {
     }
 
     build() {
+        var w = this.that.sentence.length * 90;
         // Set the dimensions and margins of the diagram
-        var margin = {top: 20, right: 90, bottom: 30, left: 90},
-            width = 1200 - margin.left - margin.right,
+        var margin = {top: 20, right: 30, bottom: 30, left: 50},
+            width = w - margin.left - margin.right,
             height = 300 - margin.top - margin.bottom;
 
         // append the svg object to the body of the page
@@ -30,9 +31,6 @@ export class BeamTree {
             .append("g")
             .attr("transform", "translate("
                 + margin.left + "," + margin.top + ")");
-
-
-        this.buildColorLegend();
 
         var i = 0,
             duration = 500,
@@ -51,9 +49,9 @@ export class BeamTree {
             domain.push(i);
         }
         this.colorScale = d3.scaleLinear().domain(domain).range(this.colors).clamp(true);
+        this.buildColorLegend();
 
-        this.treeData.isGolden = true;
-        this.initGoldHypothesis(this.treeData, true)
+        this.treeData.is_golden = true;
 
         // Assigns parent, children, height, depth
         this.root = d3.hierarchy(this.treeData, function (d) {
@@ -77,7 +75,6 @@ export class BeamTree {
         });
         this.root.x0 = height / 2;
         this.root.y0 = 0;
-        this.initGoldHypothesis(this.treeData, true);
         this.update(this.root);
     }
 
@@ -96,8 +93,9 @@ export class BeamTree {
         var scale = d3.scaleLinear().domain([1, 10]).range([30, 0]);
 
         nodes.forEach(function (d) {
+
             if (!d.children) {
-                d.y = d.parent.y + 80;
+                d.y = d.parent.y + 80 - scale(that.decodeText(d.data.name).length);
             } else if (d.parent) {
                 d.y = d.parent.y + 80 - scale(that.decodeText(d.data.name).length);
             } else {
@@ -143,10 +141,11 @@ export class BeamTree {
         nodeEnter.append('text')
             .attr("dy", "-.8em")
             .attr("x", function (d) {
-                return d.children ? -13 : 13;
+                return -13;
             })
             .attr("text-anchor", function (d) {
-                return d.children ? "end" : "start";
+                //return d.children ? "end" : "start";
+                return "end";
             })
             .style("font-weight", "bold")
             .style("font-size", "12px")
@@ -171,15 +170,27 @@ export class BeamTree {
                 return "translate(" + d.y + "," + d.x + ")";
             })
             .attr("text-anchor", function (d) {
-                return d.children ? "end" : "start";
+                //return d.children ? "end" : "start";
+                return "end";
             });
 
         nodeUpdate.select('text')
             .attr("x", function (d) {
-                return d.children ? -13 : 13;
+                return -13;
             })
             .attr("text-anchor", function (d) {
-                return d.children ? "end" : "start";
+                //return d.children ? "end" : "start";
+                return "end";
+            })
+            .text(function (d) {
+                var logprob = d.data.logprob ? d.data.logprob.toString() : "";
+
+                var path = beamTree.getPath(d);
+                if (path in that.correctionMap && that.correctionMap[path] === d.data.name) {
+                    return that.decodeText(d.data.name) + "*";
+                }
+
+                return that.decodeText(d.data.name);
             });
         // Update the node attributes and style
         nodeUpdate.select('circle.node')
@@ -219,7 +230,7 @@ export class BeamTree {
             .attr("class", function (d) {
                 if (d.data.isCandidate) {
                     return "link candidate-link"
-                } else if (d.data.isGolden) {
+                } else if (d.data.is_golden) {
                     return "link golden-link";
                 } else {
                     return "link";
@@ -240,7 +251,7 @@ export class BeamTree {
             .attr("class", function (d) {
                 if (d.data.isCandidate) {
                     return "link candidate-link"
-                } else if (d.data.isGolden) {
+                } else if (d.data.is_golden) {
                     return "link golden-link";
                 } else {
                     return "link";
@@ -268,11 +279,29 @@ export class BeamTree {
 
     }
 
+    addToDocumentUnkMap(d, word) {
+        var that = this.that;
+        var maxWordIndex = this.getMaxAttnSourceWordIndex(d);
+        var maxAttn = d.data.attn[0][maxWordIndex];
+        var maxWord = that.sentence[maxWordIndex];
+
+        if (maxAttn > 0.9) {
+            if (!(maxWord in that.documentUnkMap)) {
+                that.documentUnkMap[maxWord] = [];
+            }
+            if (that.documentUnkMap[maxWord].indexOf(word) === -1) {
+                that.documentUnkMap[maxWord].push(word);
+            }
+        }
+    }
+
     // Toggle children on click.
     click(d, el) {
 
-        if (d.data.name === "EOS") {
+        if (d.data.name === "EOS" && !d.data.isCandidate) {
+            this.resetGoldenHypothesisBeam(this.that.beam);
             this.setGoldenHypothesis(d);
+            this.setGoldenHypothesisBeam(this.that.beam, this.getPathList(d));
             this.that.attention = this.getBeamAttention(d);
             this.that.translation = this.getTranslation(d);
             this.that.updateTranslation();
@@ -280,10 +309,10 @@ export class BeamTree {
         }
 
         if (d.data.name === "EDIT") {
-            d = d.parent;
             var that = this.that;
             that.partial = this.getPath(d);
 
+            d = d.parent;
             if (d.data.attn && d.data.attn[0]) {
                 that.beamAttention = [];
                 that.beamAttention = d.data.attn[0].slice(0, that.sentence.length);
@@ -294,13 +323,23 @@ export class BeamTree {
                         attention: that.beamAttention,
                         partial: that.partial,
                         sentence: that.sentence,
-                        word: d.data.name
+                        word: ""
                     },
                 });
 
                 dialogRef.afterClosed().subscribe(result => {
-                    if (result.word !== d.data.name) {
+                    if (d.data.name === "UNK" && result.word.length > 0) {
+                        this.addToDocumentUnkMap(d, result.word);
+
+                        var partial = this.getPath(d);
+                        that.unkMap[partial] = result.word;
+                        that.onCorrectionChange(result.word);
+                    }
+                    else if (result.word.length > 0) {
                         that.correctionMap[that.partial] = result.word;
+                        if (that.partial in that.unkMap) {
+                            delete that.unkMap[that.partial];
+                        }
                         that.onCorrectionChange(result.word);
                     } else {
                         that.attentionOverrideMap[that.partial] = that.beamAttention.slice();
@@ -313,8 +352,19 @@ export class BeamTree {
         }
 
 
-        if (this.isCandidateNode(d)) {
+        if (this.isCandidateNode(d) && d.parent && d.parent.data.name === "UNK") {
+            // UNK replacement
+            this.that.unkMap[this.getPath(d.parent)] = d.data.name;
+
+            this.addToDocumentUnkMap(d.parent, d.data.name);
+
+            this.that.onCorrectionChange(d.data.name);
+        }
+        else if (this.isCandidateNode(d)) {
             this.that.correctionMap[this.getPath(d)] = d.data.name;
+            if (this.getPath(d) in this.that.unkMap) {
+                delete this.that.unkMap[this.getPath(d)];
+            }
             this.that.onCorrectionChange(d.data.name);
         } else if (this.hasCandidateNodes(d)) {
             this.removeCandidateNodes(d, el);
@@ -362,8 +412,61 @@ export class BeamTree {
         this.updateData(this.treeData);
     }
 
+    getMaxAttnSourceWordIndex(d) {
+        var maxSourceIndex = 0;
+        for (var i = 1; i < d.data.attn[0].length; i++) {
+            if (d.data.attn[0][i] > d.data.attn[0][maxSourceIndex]) {
+                maxSourceIndex = i;
+            }
+        }
+        return maxSourceIndex;
+    }
+
+
+    addCandidateNodesUNK(d, el) {
+        let maxSourceIndex = this.getMaxAttnSourceWordIndex(d);
+        var candidates = [];
+        let attentionThreshold = 0.9;
+
+        if (d.data.attn[0][maxSourceIndex] > attentionThreshold && maxSourceIndex < this.that.sentence.length) {
+            var maxWord = this.that.sentence[maxSourceIndex];
+
+            if (candidates.indexOf(maxWord) === -1) {
+                candidates.push(maxWord);
+            }
+
+            if (maxWord in this.that.documentUnkMap) {
+                let possibleTranslations = this.that.documentUnkMap[maxWord];
+                for (var i = 0; i < possibleTranslations.length; i++) {
+                    if (candidates.indexOf(possibleTranslations[i]) === -1) {
+                        candidates.push(possibleTranslations[i]);
+                    }
+                }
+            }
+        }
+        candidates.push("EDIT");
+
+        var beamNode = this.getBeamNode(this.treeData, this.getPathList(d).slice(1));
+        for (var i = 0; i < candidates.length; i++) {
+            beamNode.children.push({
+                attn: [],
+                name: candidates[i],
+                children: [],
+                logprob: -3,
+                candidates: [],
+                isCandidate: true
+            });
+        }
+        this.updateData(this.treeData);
+    }
+
     addCandidateNodes(d, el) {
         var element = d3.select(el);
+
+        if (d.data.name === "UNK") {
+            this.addCandidateNodesUNK(d, el);
+            return;
+        }
 
         var candidates = [];
         var existingChildren = [];
@@ -373,7 +476,7 @@ export class BeamTree {
         for (var i = 0; i < d.data.children.length; i++) {
             for (var j = 0; j < d.data.children[i].candidates.length; j++) {
                 var candidate = d.data.children[i].candidates[j];
-                if (existingChildren.indexOf(candidate) === -1) {
+                if (existingChildren.indexOf(candidate) === -1 && candidates.indexOf(candidate) === -1) {
                     candidates.push(candidate);
                 }
             }
@@ -402,8 +505,7 @@ export class BeamTree {
 
     mouseover(d, el) {
         var that = this.that;
-        if (d.data.attn && d.data.attn[0]) {
-            that.beamAttention = [];
+        if (!d.data.isCandidate && d.data.attn) {
             that.beamAttention = d.data.attn[0].slice(0, that.sentence.length);
         }
     }
@@ -451,7 +553,7 @@ export class BeamTree {
         var path = [];
 
         while (d) {
-            path.push(d.data.name);
+            path.push(d.data.is_unk ? "UNK" : d.data.name);
             d = d.parent;
         }
 
@@ -485,7 +587,7 @@ export class BeamTree {
     getBeamAttention(d) {
         var attention = [];
 
-        while (d && d.data.attn.length > 0) {
+        while (d && d.data.name !== 'SOS') {
             attention.push(d.data.attn[0]);
             d = d.parent;
         }
@@ -499,7 +601,7 @@ export class BeamTree {
             return;
         }
 
-        d.data.isGolden = false;
+        d.data.is_golden = false;
 
         if (!d.children || d.children.length == 0) {
             return;
@@ -515,26 +617,40 @@ export class BeamTree {
         this.resetGoldenHypothesis(this.getRoot(d));
         var node = d;
         while (node) {
-            node.data.isGolden = true;
+            node.data.is_golden = true;
             node = node.parent;
         }
         this.update(this.root);
     }
 
-    initGoldHypothesis(root, isGolden) {
-        if (root.children.length > 0) {
-            root.children[0].isGolden = isGolden;
-            this.initGoldHypothesis(root.children[0], isGolden);
+    resetGoldenHypothesisBeam(beam) {
+        if (!beam) {
+            return;
         }
-        for (var i = 1; i < root.children.length; i++) {
-            root.children[i].isGolden = false;
-            this.initGoldHypothesis(root.children[i], false);
+        beam.is_golden = false
+
+        for (var i = 0; i < beam.children.length; i++) {
+            this.resetGoldenHypothesisBeam(beam.children[i]);
         }
     }
 
+    setGoldenHypothesisBeam(beam, hypothesis) {
+        if (hypothesis.length === 0) {
+            return;
+        }
+
+        beam.is_golden = true
+        for (var i = 0; i < beam.children.length; i++) {
+            if (beam.children[i].name === hypothesis[0]) {
+                this.setGoldenHypothesis(beam.children[i], hypothesis.slice(1))
+            }
+        }
+
+    }
+
     buildColorLegend() {
-        var w = 100;
-        var h = 50;
+        var w = 90;
+        var h = 40;
         var legend = this.svg.append("defs")
             .append("svg:linearGradient")
             .attr("id", "gradient")
@@ -547,9 +663,8 @@ export class BeamTree {
 
         var data = [];
         for (var i = 0.0; i < this.colors.length; i++) {
-            data.push({offset: (i / colors.length) * 100 + "%", color: colors[i]});
+            data.push({offset: (i / this.colors.length) * 100 + "%", color: this.colors[i]});
         }
-        console.log(data);
         legend.selectAll("stop")
             .data(data)
             .enter().append("stop")
@@ -560,12 +675,19 @@ export class BeamTree {
                 return d.color;
             });
 
-        this.svg.append("g")
-            .attr("transform", "rotate(-90) translate(-175, -100)")
+        var rect = this.svg.append("g")
+            .attr("transform", "translate(150, 260)");
+
+        rect
             .append("rect")
             .attr("width", w)
             .attr("height", h - 30)
             .style("fill", "url(#gradient)")
             .attr("transform", "translate(0,10)");
+
+        rect
+            .append("text")
+            .text("Word Probability")
+            .style("font-size", "12px");
     }
 }

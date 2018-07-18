@@ -6,6 +6,7 @@ import * as d3 from 'd3';
 import {BeamNode} from './beam-node';
 import {BeamTree} from './beam-tree';
 import {DocumentService} from '../document.service';
+import {MatSnackBar} from '@angular/material';
 
 @Component({
     selector: 'app-sentence-view',
@@ -29,14 +30,19 @@ export class SentenceViewComponent implements OnInit {
     partial = "";
     attentionOverrideMap = {};
     correctionMap = {};
+    unkMap = {};
+    documentUnkMap = {};
     beamSize = 3;
     sentenceId;
     documentId;
     showAttentionMatrix = false;
     beamTree;
+    beam;
+    objectKey = Object.keys;
+    sideOpened = false;
 
     constructor(private http: HttpClient, private route: ActivatedRoute,
-                private documentService: DocumentService, public dialog: MatDialog) {
+                private documentService: DocumentService, public dialog: MatDialog, public snackBar: MatSnackBar) {
     }
 
     ngOnInit() {
@@ -49,12 +55,17 @@ export class SentenceViewComponent implements OnInit {
                 .subscribe(sentence
                     => {
                     this.sentence = sentence.inputSentence.split(" ");
-                    this.inputSentence = sentence.inputSentence.toLowerCase().replace(".", " .");
+                    this.inputSentence = sentence.inputSentence.toLowerCase();
                     this.translation = sentence.translation.split(" ");
                     this.attention = sentence.attention;
+                    this.documentUnkMap = sentence.document_unk_map;
                     this.updateTranslation();
                     this.updateAttentionMatrix();
                     this.updateBeamGraph(sentence.beam);
+                });
+            this.documentService.getSentences(this.documentId)
+                .subscribe(sentences => {
+                    this.documentSentences = sentences;
                 });
         });
     }
@@ -69,6 +80,7 @@ export class SentenceViewComponent implements OnInit {
             beam_size: event.target.value,
             attentionOverrideMap: this.attentionOverrideMap,
             correctionMap: this.correctionMap,
+            unk_map: this.unkMap
         }).subscribe(data => {
             this.updateBeamGraph(data["beam"]);
         });
@@ -90,7 +102,8 @@ export class SentenceViewComponent implements OnInit {
             sentence: this.inputSentence,
             attentionOverrideMap: this.attentionOverrideMap,
             correctionMap: this.correctionMap,
-            beam_size: this.beamSize
+            beam_size: this.beamSize,
+            unk_map: this.unkMap,
         }).subscribe(data => {
             this.updateBeamGraph(data["beam"]);
         });
@@ -101,7 +114,8 @@ export class SentenceViewComponent implements OnInit {
             sentence: this.inputSentence,
             attentionOverrideMap: this.attentionOverrideMap,
             correctionMap: this.correctionMap,
-            beam_size: this.beamSize
+            beam_size: this.beamSize,
+            unk_map: this.unkMap,
         }).subscribe(data => {
             this.updateBeamGraph(data["beam"]);
         });
@@ -195,7 +209,7 @@ export class SentenceViewComponent implements OnInit {
                 + margin.left + "," + margin.top + ")");
         var topY = 10;
         var bottomY = 70;
-        var textWidth = 60;
+        var textWidth = 70;
 
         //var sourceWords = ["this", "is"];
         //var targetWords = ["das", "ist", "test"];
@@ -324,12 +338,28 @@ export class SentenceViewComponent implements OnInit {
     }
 
     updateBeamGraph(treeData) {
+        this.beam = treeData;
         if (!this.beamTree) {
             this.beamTree = new BeamTree(treeData, this);
             this.beamTree.build();
         } else {
             this.beamTree.updateData(treeData);
         }
+    }
+
+    onAcceptTranslation() {
+
+        this.http.post('http://46.101.224.19:5000/api/correctTranslation', {
+            translation: this.translation.join(" "),
+            beam: this.beam,
+            attention: this.attention,
+            document_id: this.documentId,
+            sentence_id: this.sentenceId,
+            document_unk_map: this.documentUnkMap
+        }).subscribe(data => {
+            this.sideOpened = true;
+            let snackBarRef = this.snackBar.open('Translation accepted!', '', {duration: 700});
+        });
     }
 
     onClick() {
@@ -374,20 +404,25 @@ export class SentenceViewComponent implements OnInit {
 })
 export class BeamNodeDialog {
 
+    shownValues = [];
+    beamAttention = [];
+
     constructor(public dialogRef: MatDialogRef<BeamNodeDialog>,
                 @Inject(MAT_DIALOG_DATA) public data: any) {
         this.beamAttention = data.attention;
+        this.shownValues = this.beamAttention.slice();
     }
 
     attentionChange(event, i) {
-        var changedValue = event.value;
-        var restValue = (1.0 - changedValue) / this.beamAttention.length;
-
-        for (var j = 0; j < this.beamAttention.length; j++) {
-            if (j != i) {
-                this.beamAttention[j] = restValue;
-            }
+        var sum = 0;
+        for (var i = 0; i < this.shownValues.length; i++) {
+            sum += this.shownValues[i];
         }
+        console.log("Sum " + sum);
+        for (var i = 0; i < this.shownValues.length; i++) {
+            this.beamAttention[i] = this.shownValues[i] / sum;
+        }
+
     }
 
     onAttentionChange() {

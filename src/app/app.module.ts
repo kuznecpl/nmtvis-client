@@ -10,16 +10,18 @@ import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {MatIconModule} from '@angular/material/icon';
 import {MatCardModule} from '@angular/material/card';
 import {MatSidenavModule} from '@angular/material/sidenav';
+import {MatTableModule} from '@angular/material/table';
 import {MatListModule} from '@angular/material/list';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatSliderModule} from '@angular/material/slider';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatInputModule} from '@angular/material/input';
 import {MatGridListModule} from '@angular/material/grid-list';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatFileUploadModule} from 'angular-material-fileupload';
-
 import {AppComponent} from './app.component';
-import {DocumentsOverviewComponent} from './documents-overview/documents-overview.component';
+import {DocumentsOverviewComponent, DocumentUploadDialog} from './documents-overview/documents-overview.component';
 import {SentenceViewComponent} from './sentence-view/sentence-view.component';
 import {BeamNodeDialog} from './sentence-view/sentence-view.component';
 import {DocumentService} from './document.service';
@@ -35,19 +37,19 @@ const appRoutes: Routes = [
     declarations: [
         AppComponent,
         DocumentsOverviewComponent,
-        SentenceViewComponent, BeamNodeDialog, SentencesVisComponent
+        SentenceViewComponent, BeamNodeDialog, SentencesVisComponent, DocumentUploadDialog
     ],
     imports: [
-        BrowserModule, HttpClientModule, FormsModule, BrowserAnimationsModule,
-        MatButtonModule, MatToolbarModule, MatInputModule, MatProgressSpinnerModule,
-        MatIconModule, MatCardModule, MatSidenavModule, MatListModule, MatDividerModule,
+        BrowserModule, HttpClientModule, FormsModule, BrowserAnimationsModule, MatSnackBarModule,
+        MatButtonModule, MatToolbarModule, MatInputModule, MatProgressSpinnerModule, MatCheckboxModule,
+        MatIconModule, MatCardModule, MatTableModule, MatSidenavModule, MatListModule, MatDividerModule,
         MatSliderModule, MatInputModule, MatGridListModule, MatDialogModule, MatFileUploadModule,
         RouterModule.forRoot(
             appRoutes, // <-- debugging purposes only
         )
     ],
     entryComponents: [
-        BeamNodeDialog
+        BeamNodeDialog, DocumentUploadDialog
     ],
     providers: [DocumentService],
     bootstrap: [AppComponent]

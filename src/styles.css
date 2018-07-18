@@ -93,3 +93,12 @@ circle:hover {
 .sentence-bar:hover {
     fill: red;
 }
+
+.background-sentence-bar:hover {
+    stroke: red;
+    stroke-width: 2px;
+}
+
+mat-icon {
+    vertical-align: middle;
+}

@@ -1,2 +1,10 @@
-<div id="sentences-vis-box"></div>
-{{ selectedSentence }}
+<div [id]="'sentences-vis-box-'+metric">
+
+    <button style="vertical-align: bottom;" type="button" (click)="onSortClick()"
+            mat-icon-button title="Mark translation as corrected">
+        <mat-icon [ngStyle]="">{{ sortAscending ? 'arrow_drop_up' : 'arrow_drop_down' }}
+        </mat-icon>
+
+    </button>
+
+</div>

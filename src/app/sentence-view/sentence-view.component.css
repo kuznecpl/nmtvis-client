@@ -23,3 +23,10 @@
 .translation-label {
     font-weight: bold;
 }
+
+.side-sentence {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    padding: 5px;
+}

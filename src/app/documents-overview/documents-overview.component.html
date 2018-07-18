@@ -1,8 +1,8 @@
-<mat-sidenav-container class="example-container">
+<mat-sidenav-container class="" style="min-height: 800px;">
     <mat-sidenav mode="side" opened style="min-width: 200px;">
         <mat-list>
             <form class="translation-form" style="padding-bottom: 10px; padding-left: 5px; padding-right: 5px;">
-                <button style="width: 100%;" type="button" (click)="docUploadInput.click()" mat-raised-button
+                <button style="width: 100%;" type="button" (click)="uploadClick()" mat-raised-button
                         color="accent">Upload
                     Document
                 </button>
@@ -18,34 +18,69 @@
         </mat-list>
     </mat-sidenav>
     <mat-sidenav-content>
-        <input hidden #docUploadInput id="singleFile" type="file" [fileUploadInputFor]="fileUploadQueue"/>
-        <br>
-        <div style="max-width: 500px;margin-left: 300px;">
-            <mat-form-field style="width: 300px;">
-                <input matInput [(ngModel)]="newDocumentName" type="text"
-                       name="newDocumentName"
-                       placeholder="Document Name">
-            </mat-form-field>
-            <mat-file-upload-queue #fileUploadQueue
-                                   [fileAlias]="'file'"
-                                   [httpUrl]="uri"
-                                   [httpRequestHeaders]="{}">
+        <div class="entire-thing" *ngIf="selectedDocument">
 
-                <mat-file-upload [file]="file" [id]="i"
-                                 *ngFor="let file of fileUploadQueue.files; let i = index"></mat-file-upload>
-            </mat-file-upload-queue>
-        </div>
-        <mat-card class="example-card" *ngIf="selectedDocument">
-            <h2> {{selectedDocument.name}}</h2>
-            <mat-card-content>
-                <div *ngFor="let sentence of selectedDocument.content; let i = index;">
-                    <a [routerLink]="['/document', selectedDocument.id, 'sentence', i]">
-                        {{ (sentence.length>50)? (sentence | slice:0:50)+'..':(sentence) }}
-                    </a>
+            <mat-card class="example-card" style="padding-top: 0px">
+
+                <app-sentences-vis *ngFor="let metric of metrics" [sentences]="selectedDocument.sentences"
+                                   [(selectedSentence)]="selectedSentence"
+                                   [metric]="metric.name"
+                                   [color]="metric.color"
+                                   (onSort)="sortSentences($event[0], $event[1])">
+
+                </app-sentences-vis>
+
+                <h3 style="width:45%; display: inline-block;margin-left: 5px;margin-bottom: 0px;">Source</h3>
+                <h3 style="width:45%; display: inline-block;margin-bottom: 0px;">Translation</h3>
+
+                <mat-card-content id="document-scroll"
+                                  style="text-align: left;overflow-y: scroll; height: 480px;">
+
+                    <div *ngFor="let sentence of selectedDocument.sentences; let i = index;"
+                         style=""
+                         class="">
+                        <div class="sentence" style="padding-top: 5px;"
+                             [ngClass]="{'active-sentence': selectedSentence == sentence}">
+                            <span style="width: 45%;display:inline-block">
+
+                                <a style="text-decoration: none; color: black; vertical-align: middle;"
+                                   [id]="'sentence-' + sentence.id"
+                                   [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]">
+                                    {{sentence.source}}
+                                </a>
+                            </span>
+                            <span style="width: 45%;display: inline-block">
+                                <a style="text-decoration: none; color: black; vertical-align: middle;"
+                                   [id]="'translation-sentence-' + sentence.id"
+                                   [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]">
+                                    {{sentence.translation}}
+                                </a>
+                            </span>
+                            <button style="" type="button"
+                                    (click)="onSentenceClick(sentence)"
+                                    mat-icon-button
+                                    title="Mark translation as corrected">
+                                <mat-icon [ngStyle]="{'color': sentence.corrected ? 'green' : 'lightgray'}">check_circle
+                                </mat-icon>
+
+                            </button>
+                        </div>
+                        <mat-divider [inset]="true"></mat-divider>
+                    </div>
+                </mat-card-content>
+
+                <div>
+                    <span>Corrected {{ correctedSentences }}</span>
+
+                    <form class="example-form" style="display: inline;margin-left: 20px;">
+                        <mat-checkbox (change)="onShowCorrected($event[0])" name="showCorrected"
+                                      [(ngModel)]="showCorrected">Show corrected
+                        </mat-checkbox>
+                    </form>
                 </div>
-            </mat-card-content>
-            <app-sentences-vis [sentences]="selectedDocument.content"></app-sentences-vis>
-        </mat-card>
+
+            </mat-card>
+        </div>
     </mat-sidenav-content>
 </mat-sidenav-container>
 
