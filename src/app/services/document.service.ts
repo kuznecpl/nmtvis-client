@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {Document, Sentence} from './documents-overview/document';
+import {Document, Sentence} from '../models/document';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Observable} from 'rxjs';
 

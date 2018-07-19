@@ -1,8 +1,8 @@
 <div style="text-align:center">
     <mat-toolbar color="primary">
-        <a type="button" style="font-size: 18px;" href="/documents" mat-button>Seq2Seq-Vis</a>
+        <a type="button" style="font-size: 18px;" [routerLink]="['/documents']" mat-button>Seq2Seq-Vis</a>
         <span class="example-fill-remaining-space"></span>
-        <button type="button" mat-button>Info</button>
+        <button type="button" (click)="logout()" mat-button>Logout</button>
     </mat-toolbar>
 
     <router-outlet></router-outlet>

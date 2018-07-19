@@ -1,6 +1,6 @@
 import {Component, OnInit, Inject} from '@angular/core';
 import {Document} from './document';
-import {DocumentService} from '../document.service';
+import {DocumentService} from '../services/document.service';
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
 import {ActivatedRoute} from '@angular/router';
 

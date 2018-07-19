@@ -3,6 +3,7 @@ import {NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
 import {FormsModule}   from '@angular/forms';
 import {HttpClientModule} from '@angular/common/http';
+import {HTTP_INTERCEPTORS} from '@angular/common/http';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MatButtonModule} from '@angular/material/button';
 import {MatToolbarModule} from '@angular/material/toolbar';
@@ -24,20 +25,32 @@ import {AppComponent} from './app.component';
 import {DocumentsOverviewComponent, DocumentUploadDialog} from './documents-overview/documents-overview.component';
 import {SentenceViewComponent} from './sentence-view/sentence-view.component';
 import {BeamNodeDialog} from './sentence-view/sentence-view.component';
-import {DocumentService} from './document.service';
+import {DocumentService} from './services/document.service';
 import {SentencesVisComponent} from './documents-overview/sentences-vis/sentences-vis.component';
-
+import {LoginComponent} from './login/login.component';
+import {AuthService} from './services/auth.service';
+import {EnsureAuthenticated} from './services/ensure-authenticated.service';
+import {LoggedinRedirect} from './services/loggedin-redirect.service';
+import {TokenInterceptor} from './auth/token-interceptor';
+import {JwtInterceptor} from './auth/jwt-interceptor';
+import {RegisterComponent} from './register/register.component';
 
 const appRoutes: Routes = [
-    {path: 'documents', component: DocumentsOverviewComponent},
-    {path: 'document/:document_id/sentence/:sentence_id', component: SentenceViewComponent},
+    {path: 'login', component: LoginComponent, canActivate: [LoggedinRedirect]},
+    {path: 'register', component: RegisterComponent, canActivate: [LoggedinRedirect]},
+    {path: 'documents', component: DocumentsOverviewComponent, canActivate: [EnsureAuthenticated]},
+    {
+        path: 'document/:document_id/sentence/:sentence_id',
+        component: SentenceViewComponent,
+        canActivate: [EnsureAuthenticated]
+    },
 ];
 
 @NgModule({
     declarations: [
         AppComponent,
-        DocumentsOverviewComponent,
-        SentenceViewComponent, BeamNodeDialog, SentencesVisComponent, DocumentUploadDialog
+        DocumentsOverviewComponent, LoginComponent,
+        SentenceViewComponent, BeamNodeDialog, SentencesVisComponent, DocumentUploadDialog, RegisterComponent
     ],
     imports: [
         BrowserModule, HttpClientModule, FormsModule, BrowserAnimationsModule, MatSnackBarModule,
@@ -51,7 +64,15 @@ const appRoutes: Routes = [
     entryComponents: [
         BeamNodeDialog, DocumentUploadDialog
     ],
-    providers: [DocumentService],
+    providers: [DocumentService, AuthService, EnsureAuthenticated, LoggedinRedirect, {
+        provide: HTTP_INTERCEPTORS,
+        useClass: TokenInterceptor,
+        multi: true
+    }, {
+        provide: HTTP_INTERCEPTORS,
+        useClass: JwtInterceptor,
+        multi: true
+    }],
     bootstrap: [AppComponent]
 })
 export class AppModule {

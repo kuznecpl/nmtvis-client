@@ -298,6 +298,8 @@ export class BeamTree {
     // Toggle children on click.
     click(d, el) {
 
+        this.that.clicks += 1;
+
         if (d.data.name === "EOS" && !d.data.isCandidate) {
             this.resetGoldenHypothesisBeam(this.that.beam);
             this.setGoldenHypothesis(d);
@@ -505,6 +507,7 @@ export class BeamTree {
 
     mouseover(d, el) {
         var that = this.that;
+        that.hovers += 1;
         if (!d.data.isCandidate && d.data.attn) {
             that.beamAttention = d.data.attn[0].slice(0, that.sentence.length);
         }

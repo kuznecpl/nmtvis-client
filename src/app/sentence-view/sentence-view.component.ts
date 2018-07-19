@@ -1,11 +1,11 @@
-import {Component, OnInit, Inject} from '@angular/core';
+import {Component, OnInit, AfterContentInit, Inject} from '@angular/core';
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
 import {HttpClient} from '@angular/common/http';
 import {ActivatedRoute} from '@angular/router';
 import * as d3 from 'd3';
 import {BeamNode} from './beam-node';
 import {BeamTree} from './beam-tree';
-import {DocumentService} from '../document.service';
+import {DocumentService} from '../services/document.service';
 import {MatSnackBar} from '@angular/material';
 
 @Component({
@@ -14,7 +14,7 @@ import {MatSnackBar} from '@angular/material';
     styleUrls: ['./sentence-view.component.css']
 })
 
-export class SentenceViewComponent implements OnInit {
+export class SentenceViewComponent implements OnInit, AfterContentInit {
     title = 'DNN Vis';
     sentence = [];
     translation = [];
@@ -40,6 +40,12 @@ export class SentenceViewComponent implements OnInit {
     beam;
     objectKey = Object.keys;
     sideOpened = false;
+
+    interval;
+    timeSpent = 0;
+    clicks = 0;
+    hovers = 0;
+    corrections = 0;
 
     constructor(private http: HttpClient, private route: ActivatedRoute,
                 private documentService: DocumentService, public dialog: MatDialog, public snackBar: MatSnackBar) {
@@ -71,6 +77,9 @@ export class SentenceViewComponent implements OnInit {
     }
 
     ngAfterContentInit() {
+        this.interval = setInterval(() => {
+            this.timeSpent += 1;
+        }, 1000);
     }
 
     beamSizeChange(event) {
@@ -106,6 +115,7 @@ export class SentenceViewComponent implements OnInit {
             unk_map: this.unkMap,
         }).subscribe(data => {
             this.updateBeamGraph(data["beam"]);
+            this.corrections += 1;
         });
     }
 
@@ -260,6 +270,9 @@ export class SentenceViewComponent implements OnInit {
             })
             .attr("stroke-width", function (d) {
                 return attentionScale(d) + "px";
+            })
+            .attr("visibility", function (d, i) {
+                return d < 0.3 ? "hidden" : "visible";
             });
 
         svg.append('text').attr("y", topY).attr("x", -textWidth - 50).style("font-weight", "bold")
