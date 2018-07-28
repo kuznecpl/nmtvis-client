@@ -67,14 +67,14 @@ circle:hover {
 }
 
 .attention-selected {
-    stroke: #ff5010;
+    stroke: orange;
 }
 
-.word-box-source {
+.source-word-box {
     fill: #5fc4ff;
 }
 
-.word-box-target {
+.target-word-box {
     fill: #ffcc00;
 }
 
@@ -90,15 +90,19 @@ circle:hover {
     fill: orange;
 }
 
-.sentence-bar:hover {
-    fill: red;
+.background-sentence-bar {
+    fill: #eeeeee;
 }
 
-.background-sentence-bar:hover {
-    stroke: red;
-    stroke-width: 2px;
+.selected-sentence-bar {
+    stroke: #ff5900;
+    stroke-width: 3px;
 }
 
 mat-icon {
     vertical-align: middle;
+}
+
+.sv_complete_btn {
+    float: none !important;
 }

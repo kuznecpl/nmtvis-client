@@ -1,0 +1,30 @@
+<div style="padding-left: 20px;padding-right: 20px;">
+    <h2>What is Beam Search?</h2>
+    <div>
+        Beam Search shows you a graph with possible translations.
+        Each translation starts with the Start-of-Sequence (SOS) token and ends with the End-of-Sequence (EOS) token.
+        A path from SOS to EOS is a possible translation.
+        By clicking on an EOS node, the translation will be highlighted and marked as the correct translation.
+    </div>
+
+    <h2>What does size do?</h2>
+    <div>The size of the beam search controls how many translations are shown.
+        If you need more alternatives, increase the size, otherwise decrease it.
+    </div>
+
+    <h2>How to make corrections?</h2>
+    <div>
+        Follow the translations from left ro right, if you think a translation is wrong,
+        click on the last node that is still correct, and possible alternatives will appear.
+        If none of them seem suitable click <b>EDIT</b>.
+    </div>
+
+    <h2>What are attention weights?</h2>
+    <div>
+        Attention weights show you how important each word from the original sentence was for a particular translated
+        word.
+        You can also adjust these to create alternative translations:
+        Click on the last node you think is still correct and choose <b>EDIT</b>,
+        then use the sliders to choose which words should be the most important for translating the next word.
+    </div>
+</div>

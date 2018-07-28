@@ -37,9 +37,17 @@ export class SentencesVisComponent implements OnInit, OnChanges, AfterViewInit {
 
     ngOnChanges(changes: SimpleChanges) {
         const sentences: SimpleChange = changes.sentences;
-        console.log("Changed");
+
         if (changes.sentences) {
             this.updateSentences(sentences.currentValue);
+        }
+        if (changes.selectedSentence) {
+            if (!changes.selectedSentence.currentValue) {
+                return;
+            }
+            var i = this.sentences.indexOf(changes.selectedSentence.currentValue);
+            d3.selectAll("#sentences-vis-" + this.metric + " .background-sentence-bar").classed("selected-sentence-bar", false);
+            d3.select("#" + this.metric + "-background-sentence-bar-" + i).classed("selected-sentence-bar", true);
         }
     }
 
@@ -78,6 +86,19 @@ export class SentencesVisComponent implements OnInit, OnChanges, AfterViewInit {
             .attr("transform", "translate("
                 + margin.left + "," + margin.top + ")");
 
+        var zoom = d3.zoom().on("zoom", function () {
+            var deltaY = d3.event.sourceEvent.deltaY;
+
+            var i = sentences.indexOf(that.selectedSentence);
+            var direction = deltaY < 0 ? 1 : -1;
+            i = ((i + direction) % sentences.length + sentences.length) % sentences.length;
+            that.selectedSentence = that.sentences[i];
+            that.selectedSentenceChange.emit(that.selectedSentence);
+            that.scrollParentToChild(document.getElementById("document-scroll"),
+                document.getElementById("sentence-" + that.selectedSentence.id));
+        });
+        svg.call(zoom);
+
         var title = svg.append("text").text(this.metric).attr("x", width + 5).attr("y", 15).style("text-anchor", "start")
             .on("click", function () {
 
@@ -109,6 +130,33 @@ export class SentencesVisComponent implements OnInit, OnChanges, AfterViewInit {
             .enter();
 
         barEnter.append("rect")
+            .attr("x", function (d, i) {
+                return x(i);
+            })
+            .attr("class", "background-sentence-bar")
+            .attr("width", x.bandwidth())
+            .attr("y", function (d) {
+                return 0;
+            })
+            .attr("height", function (d) {
+                return height;
+            })
+            .attr("id", function (d, i) {
+                return that.metric + "-background-sentence-bar-" + i;
+            })
+            .on("mouseover", function (d, i) {
+                that.selectedSentence = that.sentences[i];
+                that.selectedSentenceChange.emit(that.selectedSentence);
+                d3.select(this).classed("selected-sentence-bar", true);
+
+                that.scrollParentToChild(document.getElementById("document-scroll"),
+                    document.getElementById("sentence-" + that.selectedSentence.id));
+            })
+            .on("mouseout", function () {
+                d3.select(this).classed("selected-sentence-bar", false);
+            });
+
+        barEnter.append("rect")
             .attr("class", "sentence-bar")
             .attr("x", function (d, i) {
                 return x(i);
@@ -123,26 +171,7 @@ export class SentencesVisComponent implements OnInit, OnChanges, AfterViewInit {
             .style("fill", this.color)
             .style("pointer-events", "none");
 
-        barEnter.append("rect")
-            .attr("x", function (d, i) {
-                return x(i);
-            })
-            .attr("class", "background-sentence-bar")
-            .attr("width", x.bandwidth())
-            .attr("y", function (d) {
-                return 0;
-            })
-            .attr("height", function (d) {
-                return height;
-            })
-            .style("fill", "#eeeeee00")
-            .on("mouseover", function (d, i) {
-                that.selectedSentence = that.sentences[i];
-                that.selectedSentenceChange.emit(that.selectedSentence);
 
-                that.scrollParentToChild(document.getElementById("document-scroll"),
-                    document.getElementById("sentence-" + that.selectedSentence.id));
-            });
     }
 
     scrollParentToChild(parent, child) {

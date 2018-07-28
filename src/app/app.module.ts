@@ -24,24 +24,41 @@ import {MatFileUploadModule} from 'angular-material-fileupload';
 import {AppComponent} from './app.component';
 import {DocumentsOverviewComponent, DocumentUploadDialog} from './documents-overview/documents-overview.component';
 import {SentenceViewComponent} from './sentence-view/sentence-view.component';
-import {BeamNodeDialog} from './sentence-view/sentence-view.component';
+import {BeamNodeDialog, InfoDialog} from './sentence-view/sentence-view.component';
 import {DocumentService} from './services/document.service';
 import {SentencesVisComponent} from './documents-overview/sentences-vis/sentences-vis.component';
 import {LoginComponent} from './login/login.component';
 import {AuthService} from './services/auth.service';
 import {EnsureAuthenticated} from './services/ensure-authenticated.service';
 import {LoggedinRedirect} from './services/loggedin-redirect.service';
+import {ExperimentService} from './services/experiment.service';
 import {TokenInterceptor} from './auth/token-interceptor';
 import {JwtInterceptor} from './auth/jwt-interceptor';
 import {RegisterComponent} from './register/register.component';
+import {PlainSentenceViewComponent} from './plain-sentence-view/plain-sentence-view.component';
+import {TextDisplayPipe} from './pipes/text-display.pipe';
+import {StartExperimentComponent} from './start-experiment/start-experiment.component';
+import {FinishComponent} from './finish/finish.component';
 
 const appRoutes: Routes = [
     {path: 'login', component: LoginComponent, canActivate: [LoggedinRedirect]},
     {path: 'register', component: RegisterComponent, canActivate: [LoggedinRedirect]},
     {path: 'documents', component: DocumentsOverviewComponent, canActivate: [EnsureAuthenticated]},
+    {path: 'start', component: StartExperimentComponent, canActivate: [EnsureAuthenticated]},
+    {path: 'finish', component: FinishComponent, canActivate: [EnsureAuthenticated]},
+    {
+        path: 'documents/:document_id/sentence/:sentence_id',
+        component: DocumentsOverviewComponent,
+        canActivate: [EnsureAuthenticated]
+    },
     {
         path: 'document/:document_id/sentence/:sentence_id',
         component: SentenceViewComponent,
+        canActivate: [EnsureAuthenticated]
+    },
+    {
+        path: 'plain/document/:document_id/sentence/:sentence_id',
+        component: PlainSentenceViewComponent,
         canActivate: [EnsureAuthenticated]
     },
 ];
@@ -49,8 +66,8 @@ const appRoutes: Routes = [
 @NgModule({
     declarations: [
         AppComponent,
-        DocumentsOverviewComponent, LoginComponent,
-        SentenceViewComponent, BeamNodeDialog, SentencesVisComponent, DocumentUploadDialog, RegisterComponent
+        DocumentsOverviewComponent, LoginComponent, InfoDialog,
+        SentenceViewComponent, BeamNodeDialog, SentencesVisComponent, DocumentUploadDialog, RegisterComponent, PlainSentenceViewComponent, TextDisplayPipe, StartExperimentComponent, FinishComponent
     ],
     imports: [
         BrowserModule, HttpClientModule, FormsModule, BrowserAnimationsModule, MatSnackBarModule,
@@ -62,9 +79,9 @@ const appRoutes: Routes = [
         )
     ],
     entryComponents: [
-        BeamNodeDialog, DocumentUploadDialog
+        BeamNodeDialog, DocumentUploadDialog, InfoDialog
     ],
-    providers: [DocumentService, AuthService, EnsureAuthenticated, LoggedinRedirect, {
+    providers: [DocumentService, AuthService, EnsureAuthenticated, LoggedinRedirect, ExperimentService, {
         provide: HTTP_INTERCEPTORS,
         useClass: TokenInterceptor,
         multi: true

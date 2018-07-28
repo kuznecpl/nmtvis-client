@@ -1,5 +1,5 @@
 import {Component, OnInit, Inject} from '@angular/core';
-import {Document} from './document';
+import {Document} from '../models/document';
 import {DocumentService} from '../services/document.service';
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
 import {ActivatedRoute} from '@angular/router';
@@ -17,10 +17,15 @@ export class DocumentsOverviewComponent implements OnInit {
     selectedSentence;
     newDocumentName;
     showCorrected = true;
-    metrics = [{name: "confidence", color: "orange"}, {name: "coverage_penalty", color: "lightblue"}, {
-        name: "coverage_deviation_penalty",
-        color: "green"
-    }]
+    metrics = [
+        //{name: "confidence", color: "orange"},
+        {name: "coverage_penalty", color: "lightblue"},
+        {name: "coverage_deviation_penalty", color: "green"},
+        {name: "length", color: "lightred"}
+    ];
+    sentenceId;
+    documentId;
+    loading = true;
 
     constructor(readonly documentService: DocumentService, public dialog: MatDialog, private route: ActivatedRoute) {
         this.documentService.getDocuments()
@@ -30,7 +35,6 @@ export class DocumentsOverviewComponent implements OnInit {
                     this.onClick(this.documents[0]);
                 }
             });
-
     }
 
     sortSentences(metric: string, sortAscending: boolean) {
@@ -46,22 +50,65 @@ export class DocumentsOverviewComponent implements OnInit {
 
     ngOnInit() {
         this.route.paramMap.subscribe(params => {
-
             this.documentId = params.get("document_id");
-            console.log(params);
+            this.sentenceId = params.get("sentence_id");
 
-            this.documentService.getSentence(this.documentId, this.sentenceId)
-                .subscribe(sentence
-                    => {
-                    this.sentence = sentence.inputSentence.split(" ");
-                    this.inputSentence = sentence.inputSentence.toLowerCase().replace(".", " .");
-                    this.translation = sentence.translation.split(" ");
-                    this.attention = sentence.attention;
-                    this.updateTranslation();
-                    this.updateAttentionMatrix();
-                    this.updateBeamGraph(sentence.beam);
+            if (!this.documentId || !this.sentenceId) {
+                return;
+            }
+
+            this.documentService.getDocuments()
+                .subscribe(documents => {
+                    this.documents = documents;
+                    for (var i = 0; i < this.documents.length; i++) {
+                        if (this.documents[i].id === this.documentId) {
+                            this.onClick(this.documents[i], () => {
+
+                                for (var j = 0; j < this.selectedDocument.sentences.length; j++) {
+                                    if (this.selectedDocument.sentences[j].id === this.sentenceId) {
+                                        this.selectedSentence = this.selectedDocument.sentences[j];
+                                        break;
+                                    }
+                                }
+
+                                this.scrollParentToChild(document.getElementById("document-scroll"),
+                                    document.getElementById("sentence-" + this.sentenceId));
+                            });
+
+                            return;
+                        }
+                    }
                 });
+
         });
+    }
+
+
+    scrollParentToChild(parent, child) {
+        console.log(parent);
+        console.log(child);
+        if (!parent || !child) {
+            return;
+        }
+
+        // Where is the parent on page
+        var parentRect = parent.getBoundingClientRect();
+        // What can you see?
+        var parentViewableArea = {
+            height: parent.clientHeight,
+            width: parent.clientWidth
+        };
+
+        // Where is the child
+        var childRect = child.getBoundingClientRect();
+        // Is the child viewable?
+        var isViewable = (childRect.top >= parentRect.top) && (childRect.top <= parentRect.top + parentViewableArea.height);
+
+        // if you can't see the child try to scroll parent
+        if (!isViewable) {
+            // scroll by offset relative to parent
+            parent.scrollTop = (childRect.top + parent.scrollTop) - parentRect.top
+        }
     }
 
     get correctedSentences() {
@@ -87,16 +134,34 @@ export class DocumentsOverviewComponent implements OnInit {
             });
     }
 
-    onClick(document) {
+    onClick(document, callback = () => {
+    }) {
         this.selectedDocument = document;
+        this.loading = true;
 
         this.documentService.getSentences(document.id)
             .subscribe(sentences => {
                 this.selectedDocument.sentences = sentences;
                 this.allSentences = sentences;
-                this.sortSentences("confidence");
+                this.sortSentences("length", false);
                 this.onShowCorrected();
+                callback();
+                this.loading = false;
             });
+    }
+
+    onRetrainClick() {
+        this.documentService.retrain(this.selectedDocument.id)
+            .subscribe(res => {
+                console.log(res);
+            })
+    }
+
+    onRetranslateClick() {
+        this.documentService.retranslate(this.selectedDocument.id)
+            .subscribe(res => {
+                this.onClick(this.selectedDocument);
+            })
     }
 
     uploadClick() {
@@ -109,10 +174,6 @@ export class DocumentsOverviewComponent implements OnInit {
 
         });
     }
-
-    ngOnInit() {
-    }
-
 
     onShowCorrected() {
         if (this.showCorrected) {

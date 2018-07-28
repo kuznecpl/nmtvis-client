@@ -10,7 +10,7 @@ export class DocumentService {
 
     private documents: Document[] = [new Document("1", "Dokument 1", "Das ist der Inhalt.ich bin nett."),
         new Document("2", "Dokument 2", "Ein Satz.")];
-    private documentsUrl = "http://46.101.224.19:5000/api/documents"
+    private documentsUrl = "http://46.101.224.19:5000/api/documents";
 
     constructor(private http: HttpClient) {
     }
@@ -34,4 +34,11 @@ export class DocumentService {
             {"corrected": corrected});
     }
 
+    retrain(document_id: string) {
+        return this.http.post(this.documentsUrl + "/" + document_id + "/retrain");
+    }
+
+    retranslate(document_id: string) {
+        return this.http.post(this.documentsUrl + "/" + document_id + "/translate");
+    }
 }

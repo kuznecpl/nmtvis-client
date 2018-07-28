@@ -36,24 +36,32 @@
                 <mat-card-content id="document-scroll"
                                   style="text-align: left;overflow-y: scroll; height: 480px;">
 
+                    <mat-progress-spinner *ngIf="loading" style="margin:auto;width:10px;height:10px;"
+                                          class="example-margin"
+                                          color="primary"
+                                          [diameter]="40"
+                                          mode="indeterminate">
+                    </mat-progress-spinner>
+
                     <div *ngFor="let sentence of selectedDocument.sentences; let i = index;"
                          style=""
-                         class="">
-                        <div class="sentence" style="padding-top: 5px;"
+                         class=""
+                         (mouseenter)="selectedSentence = sentence;">
+                        <div class="sentence" style="padding-top: 5px;font-size: 13px; text-align: justify"
                              [ngClass]="{'active-sentence': selectedSentence == sentence}">
-                            <span style="width: 45%;display:inline-block">
+                            <span style="width: 45%;display:inline-block;vertical-align: top;">
 
                                 <a style="text-decoration: none; color: black; vertical-align: middle;"
                                    [id]="'sentence-' + sentence.id"
                                    [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]">
-                                    {{sentence.source}}
+                                    {{sentence.source | textDisplay}}
                                 </a>
                             </span>
-                            <span style="width: 45%;display: inline-block">
+                            <span style="width: 45%;display: inline-block; vertical-align: top;padding-left: 10px;">
                                 <a style="text-decoration: none; color: black; vertical-align: middle;"
                                    [id]="'translation-sentence-' + sentence.id"
                                    [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]">
-                                    {{sentence.translation}}
+                                    {{sentence.translation | textDisplay:true}}
                                 </a>
                             </span>
                             <button style="" type="button"
@@ -77,6 +85,14 @@
                                       [(ngModel)]="showCorrected">Show corrected
                         </mat-checkbox>
                     </form>
+
+                    <button type="button" style="float: right;" (click)="onRetrainClick()" mat-raised-button
+                            color="primary">Retrain
+                    </button>
+                    <button type="button" style="float: right;margin-right: 10px;" (click)="onRetranslateClick()"
+                            mat-raised-button
+                            color="primary">Retranslation
+                    </button>
                 </div>
 
             </mat-card>

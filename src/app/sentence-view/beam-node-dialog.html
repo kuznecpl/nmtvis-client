@@ -7,12 +7,17 @@
            placeholder="Correction">
 </mat-form-field>
 <div style="text-align: center; font-weight: bold">OR</div>
-<div style="padding-left: 50px;text-align: left;font-size: 12px; max-height: 25px;"
-     *ngFor="let word of data.sentence;let i = index">
-    <div style="display: inline-block; min-width: 50px; font-weight: bold;">{{ word }}</div>
-    <mat-slider min="0" max="1" step="0.01" (change)="attentionChange($event, i)"
-                [(ngModel)]="shownValues[i]"></mat-slider>
-    {{ ((beamAttention[i] * 100) | number:'1.0-2') + '%'}}
+<div style="max-height: 400px; overflow-y: auto;">
+    <div style="padding-left: 50px;text-align: left;font-size: 12px; max-height: 25px;"
+         *ngFor="let word of data.sentence;let i = index">
+        <div style="display: inline-block; width: 100px; font-weight: bold;text-overflow: ellipsis;overflow: hidden">{{
+            word
+            }}
+        </div>
+        <mat-slider min="0" max="1" step="0.01" (change)="attentionChange($event, i)"
+                    [(ngModel)]="shownValues[i]"></mat-slider>
+        {{ ((beamAttention[i] * 100) | number:'1.0-2') + '%'}}
+    </div>
 </div>
 
 <form class="change-attention" style="text-align:center;padding-top: 20px;">

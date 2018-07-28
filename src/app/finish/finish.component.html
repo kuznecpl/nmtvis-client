@@ -1,0 +1,12 @@
+<div>
+    You have finished this user study.
+    Thanks for your participation!
+</div>
+
+<div *ngFor="let metric of metrics">
+    <div *ngFor="let measure of objectKey(metric)">
+        {{ measure + ':' + metric[measure] }}
+    </div>
+    <br>
+</div>
+{{ survey }}

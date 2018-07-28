@@ -21,27 +21,17 @@
 
     <mat-sidenav-content style="min-height: 800px;">
         <form class="translation-form">
-            <mat-form-field class="example-full-width">
-                <input name="first" [(ngModel)]="inputSentence" matInput placeholder="German Sentence" value="">
+            <mat-form-field class="example-full-width" style="width: 82%;">
+                <textarea name="first" style="font-size: 14px;" [(ngModel)]="inputSentence" matInput
+                          placeholder="German Sentence" value=""></textarea>
             </mat-form-field>
-            <button type="button" (click)="onClick()" mat-raised-button color="primary">Translate</button>
-            <button style="background-color: green" type="button" (click)="onAcceptTranslation()" mat-raised-button
-                    color="primary">
-                Accept Translation
-            </button>
-            <mat-progress-spinner *ngIf="loading" style="margin:auto;width:10px;height:10px;"
-                                  class="example-margin"
-                                  color="primary"
-                                  [diameter]="40"
-                                  mode="indeterminate">
-            </mat-progress-spinner>
         </form>
 
 
-        <div id="translation-box" style="display: inline-block;">
+        <div id="translation-box" style="display: inline-block;width: 1300px;overflow-x: auto;">
 
         </div>
-        <div style="display: inline-block; font-size:10px; max-width: 270px;">
+        <div *ngIf="debug" style="display: inline-block; font-size:10px; max-width: 270px;">
             <h3>Time: {{ timeSpent }} s | Clicks: {{ clicks }} | Hovers: {{ hovers }} | Corrections: {{
                 corrections }}</h3>
             <div *ngIf="objectKey(unkMap).length > 0">
@@ -74,33 +64,79 @@
         </div>
 
         <div>
-            <div>
-                <form class="example-form">
-                    <span style="font-weight: bold;margin-right: 30px;">Beam Search</span>
-                    <span style="font-weight: bold">Size</span>
-                    <mat-form-field style="width: 50px;">
-                        <input matInput [(ngModel)]="beamSize" (change)="beamSizeChange($event)" type="number"
-                               name="beamSize"
-                               value="3" min="1"
-                               max="10"
-                               placeholder=""
-                               style="text-align:center;">
-                    </mat-form-field>
-                </form>
-            </div>
-            <div style="display: inline-block;padding-right: 20px;vertical-align: top;">
-                <h3>Adjust weights</h3>
-                <div *ngIf="partial"> Partial Translation: <span style="font-weight: bold;">{{ partial }} </span>
-                </div>
+
+            <div style="height: 495px; overflow-y: auto; margin-right: 10px;margin-top: 20px;display: inline-block;padding-right: 20px;vertical-align: top;float: left; margin-left: 100px;">
+                <span style="font-weight: bold;">Attention Weights</span>
 
                 <div style="text-align: left;font-size: 12px; max-height: 25px;"
                      *ngFor="let word of sentence;let i = index">
-                    <div style="display: inline-block; min-width: 70px; font-weight: bold;">{{ word }}</div>
+                    <div
+                            style="display: inline-block; width: 70px; font-weight: bold;text-overflow: ellipsis;overflow: hidden">
+                        {{ word }}
+                    </div>
                     <mat-slider min="0" max="1" step="0.01" (change)="attentionChange($event, i)"
                                 [(ngModel)]="beamAttention[i]"></mat-slider>
                 </div>
             </div>
-            <div style="display:inline-block; max-width: 900px;overflow-x: auto;" id="tree"></div>
+            <div style="display:inline-block; max-width: 1100px;float: left;margin-right: 50px;" id="tree">
+                <div>
+                    <form class="example-form">
+                        <span style="font-weight: bold;margin-right: 30px;">Beam Search</span>
+                        <span style="font-weight: bold">Size</span>
+                        <mat-form-field style="width: 50px;">
+                            <input matInput [(ngModel)]="beamSize" (change)="beamSizeChange()" type="number"
+                                   name="beamSize"
+                                   value="3" min="1"
+                                   max="10"
+                                   placeholder=""
+                                   style="text-align:center;">
+                        </mat-form-field>
+                        <span style="font-weight: bold">Length</span>
+                        <mat-form-field style="width: 50px;">
+                            <input matInput [(ngModel)]="beamLength" (change)="beamSizeChange()" type="number"
+                                   name="beamLength"
+                                   value="0.5" min="0"
+                                   max="1"
+                                   step="0.1"
+                                   placeholder=""
+                                   style="text-align:center;">
+                        </mat-form-field>
+                        <span style="font-weight: bold">Coverage</span>
+                        <mat-form-field style="width: 50px;">
+                            <input matInput [(ngModel)]="beamCoverage" (change)="beamSizeChange()"
+                                   type="number"
+                                   name="beamCoverage"
+                                   value="0.5" min="0"
+                                   max="1"
+                                   step="0.1"
+                                   placeholder=""
+                                   style="text-align:center;">
+                        </mat-form-field>
+                        <button style="" type="button"
+                                mat-icon-button
+                                title="Mark translation as corrected">
+                            <mat-icon (click)="showInfo()">info
+                            </mat-icon>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div>
+            <button style="min-width: 200px;" type="button" (click)="onClick()" mat-raised-button color="primary">
+                Translate
+            </button>
+            <button style="min-width: 200px;background-color: green" type="button" (click)="onAcceptTranslation()"
+                    mat-raised-button
+                    color="primary">
+                Accept Translation
+            </button>
+            <mat-progress-spinner *ngIf="loading" style="margin:auto;width:10px;height:10px;"
+                                  class="example-margin"
+                                  color="primary"
+                                  [diameter]="40"
+                                  mode="indeterminate">
+            </mat-progress-spinner>
         </div>
     </mat-sidenav-content>
 </mat-sidenav-container>
