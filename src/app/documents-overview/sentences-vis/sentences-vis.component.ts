@@ -18,6 +18,8 @@ export class SentencesVisComponent implements OnInit, OnChanges, AfterViewInit {
     metric = "";
     @Input()
     color = "orange";
+    @Input()
+    shortname = "";
     @Output()
     onSort = new EventEmitter<any>();
 
@@ -70,8 +72,8 @@ export class SentencesVisComponent implements OnInit, OnChanges, AfterViewInit {
 
         var that = this;
         that.selectedSentence = sentences[0];
-        var margin = {top: 15, right: 200, bottom: 10, left: 0},
-            width = 900 - margin.left - margin.right,
+        var margin = {top: 15, right: 50, bottom: 10, left: 0},
+            width = 560 - margin.left - margin.right,
             height = 40 - margin.top - margin.bottom;
 
         // append the svg object to the body of the page
@@ -99,7 +101,7 @@ export class SentencesVisComponent implements OnInit, OnChanges, AfterViewInit {
         });
         svg.call(zoom);
 
-        var title = svg.append("text").text(this.metric).attr("x", width + 5).attr("y", 15).style("text-anchor", "start")
+        var title = svg.append("text").text(this.shortname).attr("x", width + 2).attr("y", 15).style("text-anchor", "start")
             .on("click", function () {
 
             });
@@ -120,7 +122,9 @@ export class SentencesVisComponent implements OnInit, OnChanges, AfterViewInit {
         x.domain(data.map(function (d, i) {
             return i;
         }));
-        y.domain([0, d3.max(data, function (d) {
+        y.domain([d3.min(data, function (d) {
+            return d;
+        }), d3.max(data, function (d) {
             return d;
         })]);
 

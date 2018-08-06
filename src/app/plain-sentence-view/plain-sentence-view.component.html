@@ -1,37 +1,23 @@
 <mat-sidenav-container>
-    <mat-sidenav #sidenav mode="over" [(opened)]="sideOpened" style="width: 400px;">
-        <div *ngFor="let sentence of documentSentences">
-            <button style="" type="button"
-                    mat-icon-button
-                    title="Mark translation as corrected">
-                <mat-icon [ngStyle]="{'color': sentence.corrected ? 'green' : 'lightgray'}">check_circle
-                </mat-icon>
-            </button>
-            <div style="display: inline-block; width: 70%; vertical-align: middle;" class="side-sentence">
-                <a style="text-decoration: none; color: black; vertical-align: middle;"
-                   [id]="'sentence-' + sentence.id"
-                   (click)="sideOpened=false"
-                   [routerLink]="['/document', this.documentId, 'sentence', sentence.id]">
-                    {{sentence.source}}
-                </a>
-            </div>
-            <mat-divider></mat-divider>
-        </div>
-    </mat-sidenav>
+
 
     <mat-sidenav-content style="min-height: 800px;">
         <form class="translation-form">
             <mat-form-field class="example-full-width" style="width: 82%;">
-                <textarea (keydown)="onSourceKeydown($event)" rows="2" name="first" style="font-size: 14px;" [(ngModel)]="sentence" matInput
+                <textarea (keydown)="onSourceKeydown($event)" rows="2" name="first" style="font-size: 14px;"
+                          [ngModel]="sentence | textDisplay"
+                          (select)="onSelectionChange('source', $event)"
+                          (ngModelChange)="sentence=$event" matInput
                           placeholder="German Sentence" value=""> </textarea>
             </mat-form-field>
         </form>
 
         <form class="example-form">
             <mat-form-field class="example-full-width" style="width: 82%;">
-                <textarea (click)="onTranslationClick()" (ngModelChange)="onChange($event)" style="font-size: 14px;"
+                <textarea (click)="onTranslationClick()" (ngModelChange)="translation=$event;onChange($event)"
+                          style="font-size: 14px;"
                           name="translation" matInput [(ngModel)]="translation"
-                          (keydown)="onTargetKeydown($event)"
+                          (keydown)="onTargetKeydown($event)" (select)="onSelectionChange('target', $event)"
                           placeholder="Translation"></textarea>
             </mat-form-field>
         </form>

@@ -66,6 +66,7 @@ export class StartExperimentComponent implements OnInit {
     showSubmitButton = false;
     documentId;
     sentenceId;
+    experimentType;
 
     constructor(private experimentService: ExperimentService, private router: Router) {
         var defaultThemeColors = Survey
@@ -82,7 +83,7 @@ export class StartExperimentComponent implements OnInit {
     }
 
     onStartExperiment() {
-        this.router.navigate(["/document", this.documentId, "sentence", this.sentenceId]);
+        this.router.navigate(["/" + this.experimentType, "document", this.documentId, "sentence", this.sentenceId]);
     }
 
     ngOnInit() {
@@ -97,6 +98,7 @@ export class StartExperimentComponent implements OnInit {
                     this.showSubmitButton = true;
                     this.documentId = result.documentId;
                     this.sentenceId = result.sentenceId;
+                    this.experimentType = result.experimentType;
                 });
         });
         Survey

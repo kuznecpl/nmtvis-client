@@ -10,6 +10,7 @@ export class BeamTree {
     colors;
     zoom;
     colorLegend;
+    hoveredNode;
 
     constructor(private treeData: any, private that: any) {
 
@@ -185,12 +186,13 @@ export class BeamTree {
         nodeEnter.append('text')
             .attr("dy", "-.8em")
             .attr("x", function (d) {
-                return -13;
+                return -1;
             })
             .attr("text-anchor", function (d) {
                 //return d.children ? "end" : "start";
                 return "end";
             })
+            .style("pointer-events", "none")
             .style("font-weight", "bold")
             .style("font-size", "14px")
             .text(function (d) {
@@ -220,7 +222,7 @@ export class BeamTree {
 
         nodeUpdate.select('text')
             .attr("x", function (d) {
-                return -13;
+                return -1;
             })
             .attr("text-anchor", function (d) {
                 //return d.children ? "end" : "start";
@@ -341,8 +343,7 @@ export class BeamTree {
 
     // Toggle children on click.
     click(d, el) {
-
-        this.that.experimentMetrics.clicks += 1;
+        this.that.addEvent("node-click", this.getPath(d) + " " + d.data.name);
 
         if (d.data.name === "EOS" && !d.data.isCandidate) {
             this.resetGoldenHypothesisBeam(this.that.beam);
@@ -369,17 +370,23 @@ export class BeamTree {
                         attention: that.beamAttention,
                         partial: that.partial,
                         sentence: that.sentence,
-                        word: ""
+                        word: "",
+                        sentenceView: that,
                     },
                 });
 
                 dialogRef.afterClosed().subscribe(result => {
+                    if (!result) {
+                        // dialog cancelled
+                        return;
+                    }
                     if (d.data.name === "UNK" && result.word.length > 0) {
                         this.addToDocumentUnkMap(d, result.word);
 
                         var partial = this.getPath(d);
                         that.unkMap[partial] = result.word;
                         that.onCorrectionChange(result.word);
+                        that.addEvent("unk-edit", this.getPath(d) + "=>" + result.word);
                     }
                     else if (result.word.length > 0) {
                         this.addToCorrectionMap(result.word, that.partial)
@@ -387,6 +394,7 @@ export class BeamTree {
                             delete that.unkMap[that.partial];
                         }
                         that.onCorrectionChange(result.word);
+                        that.addEvent("beam-edit", this.getPath(d) + " " + d.data.name + "=>" + result.word);
                     } else {
                         that.attentionOverrideMap[that.partial] = that.beamAttention.slice();
                         that.onAttentionChange();
@@ -405,6 +413,7 @@ export class BeamTree {
             this.addToDocumentUnkMap(d.parent, d.data.name);
 
             this.that.onCorrectionChange(d.data.name);
+            this.that.addEvent("unk-replace", this.getPath(d) + "=>" + d.data.name;
         }
         else if (this.isCandidateNode(d)) {
             this.addToCorrectionMap(d.data.name, this.getPath(d));
@@ -412,6 +421,7 @@ export class BeamTree {
                 delete this.that.unkMap[this.getPath(d)];
             }
             this.that.onCorrectionChange(d.data.name);
+            this.that.addEvent("beam-replace", this.getPath(d) + "=>" + d.data.name);
         } else if (this.hasCandidateNodes(d)) {
             this.removeCandidateNodes(d, el);
         } else {
@@ -560,16 +570,26 @@ export class BeamTree {
 
     mouseover(d, el) {
         var that = this.that;
-        that.experimentMetrics.hovers += 1;
+        that.addEvent("node-hover", this.getPath(d) + " " + d.data.name);
+
         if (!d.data.isCandidate && d.data.attn) {
             that.beamAttention = d.data.attn[0].slice(0, that.sentence.length);
             that.onCurrentAttentionChange();
         }
+
+        if (this.hoveredNode) {
+            d3.select(this.hoveredNode).select("circle").style("stroke", "white");
+        }
+
+        d3.select(el).select("text").style("font-size", "16px");
+        d3.select(el).select("circle").style("stroke", "#ffcc00");
+        this.hoveredNode = el;
     }
 
     mouseout(d, el) {
         var element = d3.select(el);
         this.that.clearAttentionSelection();
+        d3.select(el).select("text").style("font-size", "14px");
     }
 
     // Creates a curved (diagonal) path from parent to the child node

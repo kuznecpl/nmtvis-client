@@ -19,9 +19,10 @@ export class DocumentsOverviewComponent implements OnInit {
     showCorrected = true;
     metrics = [
         //{name: "confidence", color: "orange"},
-        {name: "coverage_penalty", color: "lightblue"},
-        {name: "coverage_deviation_penalty", color: "green"},
-        {name: "length", color: "lightred"}
+        {name: "coverage_penalty", color: "lightblue", shortname: "CP"},
+        {name: "coverage_deviation_penalty", color: "green", shortname: "CDP"},
+        {name: "length", color: "lightred", shortname: "Length"},
+        {name: "confidence", color: "#3f51b5", shortname: "Conf"}
     ];
     sentenceId;
     documentId;
@@ -81,6 +82,11 @@ export class DocumentsOverviewComponent implements OnInit {
                 });
 
         });
+    }
+
+    onBrushSelectionChange(sentences) {
+        console.log("Brush " + sentences.length);
+        this.selectedDocument.sentences = sentences;
     }
 
 

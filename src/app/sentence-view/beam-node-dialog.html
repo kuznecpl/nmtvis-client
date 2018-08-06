@@ -1,12 +1,12 @@
-<h2 mat-dialog-title style="text-align: center;">Adjust weights</h2>
-<div *ngIf="data.partial"> Partial Translation: <span style="font-weight: bold;">{{ data.partial }} </span>
+<h2 mat-dialog-title style="text-align: center;">Correct translation</h2>
+<div *ngIf="data.partial"> Partial Translation: <span style="font-weight: bold;">{{ data.partial }} ...</span>
 </div>
 
 <mat-form-field style="width:100%;">
-    <input [(ngModel)]="data.word" matInput type="text"
-           placeholder="Correction">
+    <input [(ngModel)]="data.word" matInput type="text" (keydown)="onKeyDown($event)"
+           placeholder="Enter word(s)">
 </mat-form-field>
-<div style="text-align: center; font-weight: bold">OR</div>
+<div style="text-align: center;">OR decide what to focus on for the next word:</div>
 <div style="max-height: 400px; overflow-y: auto;">
     <div style="padding-left: 50px;text-align: left;font-size: 12px; max-height: 25px;"
          *ngFor="let word of data.sentence;let i = index">

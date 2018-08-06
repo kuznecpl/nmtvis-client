@@ -39,6 +39,7 @@ import {PlainSentenceViewComponent} from './plain-sentence-view/plain-sentence-v
 import {TextDisplayPipe} from './pipes/text-display.pipe';
 import {StartExperimentComponent} from './start-experiment/start-experiment.component';
 import {FinishComponent} from './finish/finish.component';
+import { ParallelCoordinatesComponent } from './documents-overview/parallel-coordinates/parallel-coordinates.component';
 
 const appRoutes: Routes = [
     {path: 'login', component: LoginComponent, canActivate: [LoggedinRedirect]},
@@ -57,6 +58,11 @@ const appRoutes: Routes = [
         canActivate: [EnsureAuthenticated]
     },
     {
+        path: 'beam/document/:document_id/sentence/:sentence_id',
+        component: SentenceViewComponent,
+        canActivate: [EnsureAuthenticated]
+    },
+    {
         path: 'plain/document/:document_id/sentence/:sentence_id',
         component: PlainSentenceViewComponent,
         canActivate: [EnsureAuthenticated]
@@ -67,7 +73,7 @@ const appRoutes: Routes = [
     declarations: [
         AppComponent,
         DocumentsOverviewComponent, LoginComponent, InfoDialog,
-        SentenceViewComponent, BeamNodeDialog, SentencesVisComponent, DocumentUploadDialog, RegisterComponent, PlainSentenceViewComponent, TextDisplayPipe, StartExperimentComponent, FinishComponent
+        SentenceViewComponent, BeamNodeDialog, SentencesVisComponent, DocumentUploadDialog, RegisterComponent, PlainSentenceViewComponent, TextDisplayPipe, StartExperimentComponent, FinishComponent, ParallelCoordinatesComponent
     ],
     imports: [
         BrowserModule, HttpClientModule, FormsModule, BrowserAnimationsModule, MatSnackBarModule,

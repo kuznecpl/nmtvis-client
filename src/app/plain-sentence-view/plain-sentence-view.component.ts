@@ -2,6 +2,7 @@ import {Component, OnInit, AfterContentInit, Inject} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {ActivatedRoute, Router} from '@angular/router';
 import {DocumentService} from '../services/document.service';
+import {ExperimentService} from '../services/experiment.service';
 
 @Component({
     selector: 'app-plain-sentence-view',
@@ -12,15 +13,12 @@ export class PlainSentenceViewComponent implements OnInit {
 
     sentence = "";
     translation = "";
-    keypresses = 0;
-    clicks = 0;
-    sourceCopyCount = 0;
-    targetCopyCount = 0;
-    targetPasteCount = 0;
-    backspaceCount = 0;
+    interval;
+    timeSpent = 0;
+    events = [];
 
     constructor(private http: HttpClient, private route: ActivatedRoute, private router: Router,
-                private documentService: DocumentService) {
+                private documentService: DocumentService, private experimentService: ExperimentService) {
     }
 
     ngOnInit() {
@@ -31,14 +29,25 @@ export class PlainSentenceViewComponent implements OnInit {
             this.documentService.getSentence(this.documentId, this.sentenceId)
                 .subscribe(sentence
                     => {
-                    this.sentence = sentence.inputSentence;
-                    this.translation = sentence.translation;
+                    this.sentence = this.decodeText(sentence.inputSentence);
+                    let translation = this.decodeText(sentence.translation);
+                    this.translation = translation[0].toUpperCase() + translation.slice(1, -4);
+                    this.timeSpent = 0;
                 });
         });
     }
 
     decodeText(text) {
-        return text.replace(/&apos;/g, "'").replace(/&quot;/g, '"');
+        text = text.replace(/&apos;/g, "'");
+        text = text.replace(/&quot;/g, '"');
+        text = text.replace(/& quot ;/g, '"');
+        return text;
+    }
+
+    ngAfterContentInit() {
+        this.interval = setInterval(() => {
+            this.timeSpent += 1;
+        }, 500);
     }
 
     encodeText(text) {
@@ -46,28 +55,63 @@ export class PlainSentenceViewComponent implements OnInit {
     }
 
     onTranslationClick() {
-        this.clicks += 1;
+        this.addEvent("mouseclick");
     }
 
     onChange(event) {
-        this.keypresses += 1;
+
+    }
+
+    addEvent(type, val = "") {
+        this.events.push({"type": type, "time": this.timeSpent, "val": val})
     }
 
     onSourceKeydown(event) {
         if (event.key === "c" && event.ctrlKey) {
-            this.sourceCopyCount += 1;
+            this.addEvent("source-copy");
         }
     }
 
+    onSelectionChange(source, ev: any) {
+        const start = ev.target.selectionStart;
+        const end = ev.target.selectionEnd;
+        let selection = ev.target.value.substr(start, end - start);
+        this.addEvent(source + "-selection", selection);
+    }
+
     onTargetKeydown(event) {
-        if (event.key === "Backspace") {
-            this.backspaceCount += 1;
-        }
         if (event.key === "c" && event.ctrlKey) {
-            this.targetCopyCount += 1;
+            this.addEvent("target-copy");
         }
-        if (event.key === "v" && event.ctrlKey) {
-            this.targetPasteCount += 1;
+        else if (event.key === "v" && event.ctrlKey) {
+            this.addEvent("target-paste");
+        }
+        else if (event.key === "x" && event.ctrlKey) {
+            this.addEvent("target-cut");
+        }
+        else {
+            this.addEvent("keydown", event.key);
+        }
+    }
+
+    onAcceptTranslation() {
+        if (this.experimentService) {
+            this.experimentService.getNextSentence({
+                sentence: this.sentence,
+                translation: this.translation,
+                events: this.events,
+                timeSpent: this.timeSpent,
+            })
+                .subscribe(result => {
+                    if (result.status !== "finished") {
+                        this.router.navigate(["/" + result.experimentType, 'document',
+                            result.documentId, "sentence", result.sentenceId]);
+                    } else {
+                        this.router.navigate(['/finish']);
+                    }
+                });
+        } else {
+            this.router.navigate(['/documents', this.documentId, "sentence", this.sentenceId]);
         }
     }
 

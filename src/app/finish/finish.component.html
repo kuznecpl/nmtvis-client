@@ -4,8 +4,10 @@
 </div>
 
 <div *ngFor="let metric of metrics">
-    <div *ngFor="let measure of objectKey(metric)">
-        {{ measure + ':' + metric[measure] }}
+    <div>Sentence: {{ metric.sentence}} Translation: {{ metric.translation }}</div>
+    <div>Events:</div>
+    <div *ngFor="let event of metric.events">
+        <span>{{ event.time + '|' + event.type + '|' + event.val }}</span>
     </div>
     <br>
 </div>

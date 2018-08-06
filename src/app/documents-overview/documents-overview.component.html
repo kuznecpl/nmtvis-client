@@ -22,13 +22,24 @@
 
             <mat-card class="example-card" style="padding-top: 0px">
 
-                <app-sentences-vis *ngFor="let metric of metrics" [sentences]="selectedDocument.sentences"
-                                   [(selectedSentence)]="selectedSentence"
-                                   [metric]="metric.name"
-                                   [color]="metric.color"
-                                   (onSort)="sortSentences($event[0], $event[1])">
+                <div *ngIf="showMetrics">
+                    <app-sentences-vis *ngFor="let metric of metrics" [sentences]="selectedDocument.sentences"
+                                       [(selectedSentence)]="selectedSentence"
+                                       [metric]="metric.name"
+                                       [color]="metric.color"
+                                       [shortname]="metric.shortname"
+                                       (onSort)="sortSentences($event[0], $event[1])">
 
-                </app-sentences-vis>
+                    </app-sentences-vis>
+                </div>
+                <div *ngIf="true">
+                    <app-parallel-coordinates
+                            [sentences]="allSentences"
+                            (onSelectionChange)="onBrushSelectionChange($event)"
+                            [selectedSentence]="selectedSentence">
+
+                    </app-parallel-coordinates>
+                </div>
 
                 <h3 style="width:45%; display: inline-block;margin-left: 5px;margin-bottom: 0px;">Source</h3>
                 <h3 style="width:45%; display: inline-block;margin-bottom: 0px;">Translation</h3>
