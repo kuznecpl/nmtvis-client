@@ -2,7 +2,7 @@ import {Pipe, PipeTransform} from '@angular/core';
 
 @Pipe({
     name: 'textDisplay'
-})
+}
 export class TextDisplayPipe implements PipeTransform {
 
     transform(text: string, removeEOS: boolean): any {

@@ -3,6 +3,8 @@ import {Document} from '../models/document';
 import {DocumentService} from '../services/document.service';
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
 import {ActivatedRoute} from '@angular/router';
+import {TextDisplayPipe} from '../pipes/text-display.pipe';
+import * as d3 from 'd3';
 
 @Component({
     selector: 'app-documents-overview',
@@ -18,7 +20,6 @@ export class DocumentsOverviewComponent implements OnInit {
     newDocumentName;
     showCorrected = true;
     metrics = [
-        //{name: "confidence", color: "orange"},
         {name: "coverage_penalty", color: "lightblue", shortname: "CP"},
         {name: "coverage_deviation_penalty", color: "green", shortname: "CDP"},
         {name: "length", color: "lightred", shortname: "Length"},
@@ -27,8 +28,15 @@ export class DocumentsOverviewComponent implements OnInit {
     sentenceId;
     documentId;
     loading = true;
+    topics = [{name: 'diagramm', active: false, occurrences: 0},
+        {name: 'element', active: false, occurrences: 0},
+        {name: 'computer', active: false, occurrences: 0}
+    ];
+    newKeyphrase;
+    hoverTopic;
 
-    constructor(readonly documentService: DocumentService, public dialog: MatDialog, private route: ActivatedRoute) {
+    constructor(readonly documentService: DocumentService, public dialog: MatDialog, private route: ActivatedRoute,
+                private textPipe: TextDisplayPipe) {
         this.documentService.getDocuments()
             .subscribe(documents => {
                 this.documents = documents;
@@ -36,6 +44,69 @@ export class DocumentsOverviewComponent implements OnInit {
                     this.onClick(this.documents[0]);
                 }
             });
+    }
+
+    isHighlighted(word) {
+        for (var topic of this.topics) {
+            if (topic.active && word.trim().toLowerCase().indexOf(topic.name) >= 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    isHighlightedTarget(sentence, word, index) {
+
+    }
+
+    isTopicMatch(text, topic) {
+        return text.trim().toLowerCase().indexOf(topic.name) >= 0;
+    }
+
+    addTopic(topicName) {
+        this.topics.push({
+            name: topicName,
+            occurrences: 0,
+            active: false,
+        });
+        this.newKeyphrase = "";
+    }
+
+    onActiveTopicChange() {
+        var currentSentences = this.allSentences;
+        var filteredSentences = [];
+        var words = d3.selectAll('.source-word');
+        var that = this;
+        for (var topic of that.topics) {
+            topic.occurrences = 0;
+        }
+
+        for (let sentence of currentSentences) {
+            var hasAllTopics = true;
+            for (var topic of that.topics) {
+                if (topic.active && !this.isTopicMatch(sentence.source.replace(/@@ /g, ""), topic)) {
+                    hasAllTopics = false;
+                    break;
+                }
+            }
+            if (hasAllTopics) {
+                filteredSentences.push(sentence);
+            }
+        }
+        this.selectedDocument.sentences = filteredSentences;
+
+        words.each(function () {
+            var el = d3.select(this);
+            var highlight = false;
+
+            for (var topic of that.topics) {
+                if (topic.active && el.text().trim().toLowerCase().indexOf(topic.name) >= 0) {
+                    highlight = true;
+                    topic.occurrences += 1;
+                }
+            }
+        });
+        this.topics = this.topics.slice();
     }
 
     sortSentences(metric: string, sortAscending: boolean) {
@@ -85,14 +156,15 @@ export class DocumentsOverviewComponent implements OnInit {
     }
 
     onBrushSelectionChange(sentences) {
-        console.log("Brush " + sentences.length);
         this.selectedDocument.sentences = sentences;
     }
 
+    scrollToSentence(sentenceId) {
+        this.scrollParentToChild(document.getElementById("document-scroll"),
+            document.getElementById("sentence-" + sentenceId));
+    }
 
     scrollParentToChild(parent, child) {
-        console.log(parent);
-        console.log(child);
         if (!parent || !child) {
             return;
         }
@@ -187,7 +259,7 @@ export class DocumentsOverviewComponent implements OnInit {
             return;
         }
 
-        this.allSentences = this.selectedDocument.sentences;
+        //this.allSentences = this.selectedDocument.sentences;
         var sentences = [];
 
         for (var i = 0; i < this.selectedDocument.sentences.length; i++) {

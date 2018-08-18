@@ -1,5 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
-@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+@import '~@angular/material/prebuilt-themes/indigo-pink.css';
 
 * {
     font-family: 'Roboto', sans-serif;
@@ -139,4 +139,60 @@ mat-icon {
 .selected-line {
     stroke: orange !important;
     stroke-width: 3px;
+}
+
+polygon {
+    fill: lightgray;
+    stroke: white;
+    stroke-width: 1px;
+    cursor: pointer
+}
+
+.selected-triangle {
+    fill: black;
+}
+
+polygon:hover {
+    stroke: black;
+}
+
+.axis:hover line,
+.axis:hover path {
+    fill: none;
+    stroke: #222;
+    stroke-width: 2px;
+}
+
+.axis:hover .title {
+    font-weight: bold;
+}
+
+.axis:hover .tick text {
+    opacity: 1;
+}
+
+.brush .extent {
+    fill-opacity: .3;
+    stroke: #fff;
+    stroke-width: 1px;
+}
+
+.axis .tick text {
+    fill: #222;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.axis:hover .tick text {
+    opacity: 1;
+    font-size: 12px;
+}
+
+#keyphrase-view .mat-checkbox-inner-container {
+    height: 15px !important;
+    width: 15px !important;
+}
+
+#keyphrase-view .mat-checkbox-label{
+    font-size: 12px;
 }

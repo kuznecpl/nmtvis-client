@@ -22,3 +22,7 @@
 .active-sentence {
     background: #ffd891;
 }
+
+.topic:hover {
+    background-color: #ddd;
+}

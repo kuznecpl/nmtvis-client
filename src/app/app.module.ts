@@ -39,7 +39,7 @@ import {PlainSentenceViewComponent} from './plain-sentence-view/plain-sentence-v
 import {TextDisplayPipe} from './pipes/text-display.pipe';
 import {StartExperimentComponent} from './start-experiment/start-experiment.component';
 import {FinishComponent} from './finish/finish.component';
-import { ParallelCoordinatesComponent } from './documents-overview/parallel-coordinates/parallel-coordinates.component';
+import {ParallelCoordinatesComponent} from './documents-overview/parallel-coordinates/parallel-coordinates.component';
 
 const appRoutes: Routes = [
     {path: 'login', component: LoginComponent, canActivate: [LoggedinRedirect]},
@@ -73,7 +73,9 @@ const appRoutes: Routes = [
     declarations: [
         AppComponent,
         DocumentsOverviewComponent, LoginComponent, InfoDialog,
-        SentenceViewComponent, BeamNodeDialog, SentencesVisComponent, DocumentUploadDialog, RegisterComponent, PlainSentenceViewComponent, TextDisplayPipe, StartExperimentComponent, FinishComponent, ParallelCoordinatesComponent
+        SentenceViewComponent, BeamNodeDialog, SentencesVisComponent,
+        DocumentUploadDialog, RegisterComponent, PlainSentenceViewComponent,
+        TextDisplayPipe, StartExperimentComponent, FinishComponent, ParallelCoordinatesComponent
     ],
     imports: [
         BrowserModule, HttpClientModule, FormsModule, BrowserAnimationsModule, MatSnackBarModule,
@@ -87,7 +89,7 @@ const appRoutes: Routes = [
     entryComponents: [
         BeamNodeDialog, DocumentUploadDialog, InfoDialog
     ],
-    providers: [DocumentService, AuthService, EnsureAuthenticated, LoggedinRedirect, ExperimentService, {
+    providers: [DocumentService, AuthService, TextDisplayPipe, EnsureAuthenticated, LoggedinRedirect, ExperimentService, {
         provide: HTTP_INTERCEPTORS,
         useClass: TokenInterceptor,
         multi: true

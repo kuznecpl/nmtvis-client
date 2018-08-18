@@ -351,7 +351,7 @@ export class BeamTree {
             this.setGoldenHypothesisBeam(this.that.beam, this.getPathList(d));
             this.that.attention = this.getBeamAttention(d);
             this.that.translation = this.getTranslation(d);
-            this.that.updateTranslation();
+            this.that.updateTranslation(this.that.sentence.join(" "), this.that.translation.join(" "));
             return;
         }
 

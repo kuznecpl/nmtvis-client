@@ -76,11 +76,12 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
                 .subscribe(sentence
                     => {
                     this.sentence = sentence.inputSentence.split(" ");
-                    this.inputSentence = sentence.inputSentence;
+                    this.inputSentence = this.decodeText(sentence.inputSentence);
+
                     this.translation = sentence.translation.split(" ");
                     this.attention = sentence.attention;
                     this.documentUnkMap = sentence.document_unk_map;
-                    this.updateTranslation();
+                    this.updateTranslation(sentence.inputSentence, sentence.translation);
                     this.updateAttentionMatrix();
                     this.updateBeamGraph(sentence.beam);
                 });
@@ -99,7 +100,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
     beamSizeChange() {
         this.http.post('http://46.101.224.19:5000/beamUpdate', {
-            sentence: this.inputSentence,
+            sentence: this.encodeText(this.inputSentence),
             beam_size: this.beamSize,
             beam_length: this.beamLength,
             beam_coverage: this.beamCoverage,
@@ -124,7 +125,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
     onCorrectionChange(word) {
         this.http.post('http://46.101.224.19:5000/wordUpdate', {
-            sentence: this.inputSentence,
+            sentence: this.encodeText(this.inputSentence),
             attentionOverrideMap: this.attentionOverrideMap,
             correctionMap: this.correctionMap,
             beam_size: this.beamSize,
@@ -138,7 +139,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
     onAttentionChange() {
         this.http.post('http://46.101.224.19:5000/attentionUpdate', {
-            sentence: this.inputSentence,
+            sentence: this.encodeText(this.inputSentence),
             attentionOverrideMap: this.attentionOverrideMap,
             correctionMap: this.correctionMap,
             beam_size: this.beamSize,
@@ -231,12 +232,12 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
         d3.selectAll(".source-word-text").style("font-weight", "normal");
     }
 
-    updateTranslation() {
+    updateTranslation(source: string, translation: string) {
         var that = this;
         var textWidth = 70;
         var leftMargin = 120;
-        var w = (that.inputSentence.split(" ").length + 1) * textWidth + leftMargin;
-        w = Math.max(w, that.translation.length * 70 + leftMargin);
+        var w = (source.split(" ").length + 1) * textWidth + leftMargin;
+        w = Math.max(w, translation.split(" ").length * 70 + leftMargin);
         var margin = {top: 20, right: 20, bottom: 20, left: leftMargin},
             width = w - margin.left - margin.right,
             height = 100 - margin.top - margin.bottom;
@@ -260,9 +261,9 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
         //var sourceWords = ["this", "is"];
         //var targetWords = ["das", "ist", "test"];
 
-        var sourceWords = this.inputSentence.split(" ");
+        var sourceWords = source.split(" ");
         sourceWords.push("EOS")
-        var targetWords = this.translation;
+        var targetWords = translation.split(" ");
         console.log("Translation is " + this.translation);
 
         //var attention = [[0, 1], [1, 0], [0.5, 0.5]];
@@ -436,11 +437,15 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
     }
 
     encodeText(text) {
-        return text.replace(/'/g, "&apos;").replace(/"/g, '&quot;');
+        return text.replace(/'/g, "&apos;").replace(/"/g, '&quot;')
+            .replace(/\u200b\u200b/g, "@@ ")
+            .replace(/\u200b/g, "@@");
     }
 
     decodeText(text) {
-        return text.replace(/&apos;/g, "'").replace(/&quot;/g, '"');
+        return text.replace(/&apos;/g, "'").replace(/&quot;/g, '"')
+            .replace(/@@ /g, "\u200b\u200b")
+            .replace(/@@/g, "\u200b");
     }
 
     updateBeamGraph(treeData) {
@@ -465,7 +470,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
         }).subscribe(data => {
             //this.sideOpened = true;
             let snackBarRef = this.snackBar.open('Translation accepted!', '', {duration: 700});
-
+            this.router.navigate(['/documents', this.documentId, "sentence", this.sentenceId]);
             /**
              if (this.experimentService) {
                 this.experimentMetrics.sentence = this.sentence.join(" ");
@@ -481,9 +486,9 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
                         }
                     });
             } else {
-                this.router.navigate(['/documents', this.documentId, "sentence", this.sentenceId]);
+
             }*/
-            
+
         });
     }
 
@@ -508,7 +513,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
             this.loading = false;
             this.haveContent = true;
             this.updateBeamGraph(data["beam"]);
-            this.updateTranslation();
+            this.updateTranslation(data["sentence"], data["translation"]);
             this.updateAttentionMatrix();
         });
     }

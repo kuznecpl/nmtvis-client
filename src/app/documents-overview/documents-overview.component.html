@@ -20,7 +20,7 @@
     <mat-sidenav-content>
         <div class="entire-thing" *ngIf="selectedDocument">
 
-            <mat-card class="example-card" style="padding-top: 0px">
+            <mat-card class="example-card" style="padding-top: 0px;">
 
                 <div *ngIf="showMetrics">
                     <app-sentences-vis *ngFor="let metric of metrics" [sentences]="selectedDocument.sentences"
@@ -32,20 +32,53 @@
 
                     </app-sentences-vis>
                 </div>
-                <div *ngIf="true">
-                    <app-parallel-coordinates
-                            [sentences]="allSentences"
-                            (onSelectionChange)="onBrushSelectionChange($event)"
-                            [selectedSentence]="selectedSentence">
+                <div id="keyphrase-view" style="height:160px">
+                    <div style="float:left;display: inline-block;vertical-align: top;width: 19%; height: 100%">
+                        <mat-card class="example-card" style="padding: 10px;height: 100%;">
+                            <mat-card-header>
+                                Keyphrases
+                            </mat-card-header>
+                            <mat-card-content style="height: 70%;">
+                                <div style="overflow-y: scroll;text-align: start;height: 90%;">
+                                    <div *ngFor="let topic of topics">
+                                        <div class="topic" style="padding:2px;" (mouseenter)="hoverTopic=topic"
+                                             (mouseleave)="hoverTopic = null">
+                                            <mat-checkbox style="display:inline" [name]="topic.name"
+                                                          [(ngModel)]="topic.active" (change)="onActiveTopicChange()">
+                                                {{topic.name}} <span style="color: #a8a8a8">{{topic.occurrences}}</span>
+                                            </mat-checkbox>
+                                        </div>
+                                        <mat-divider [inset]="true"></mat-divider>
+                                    </div>
+                                </div>
+                                <mat-form-field style="width:100%;">
+                                    <input (keyup.enter)="addTopic(newKeyphrase)" [(ngModel)]="newKeyphrase" matInput
+                                           type="text"
+                                           placeholder="New Keyphrase">
+                                </mat-form-field>
+                            </mat-card-content>
+                        </mat-card>
+                    </div>
 
-                    </app-parallel-coordinates>
+                    <div *ngIf="true" style="display: inline-block">
+                        <app-parallel-coordinates
+                                (onSortMetric)="sortSentences($event[0], $event[1])"
+                                [sentences]="allSentences"
+                                [topics]="topics"
+                                [hoverTopic]="hoverTopic"
+                                (onSelectionChange)="onBrushSelectionChange($event)"
+                                [(selectedSentence)]="selectedSentence"
+                                (onSentenceSelection)="scrollToSentence($event)">
+
+                        </app-parallel-coordinates>
+                    </div>
                 </div>
 
                 <h3 style="width:45%; display: inline-block;margin-left: 5px;margin-bottom: 0px;">Source</h3>
                 <h3 style="width:45%; display: inline-block;margin-bottom: 0px;">Translation</h3>
 
                 <mat-card-content id="document-scroll"
-                                  style="text-align: left;overflow-y: scroll; height: 480px;">
+                                  style="text-align: left;overflow-y: scroll; height: 450px;">
 
                     <mat-progress-spinner *ngIf="loading" style="margin:auto;width:10px;height:10px;"
                                           class="example-margin"
@@ -57,22 +90,33 @@
                     <div *ngFor="let sentence of selectedDocument.sentences; let i = index;"
                          style=""
                          class=""
-                         (mouseenter)="selectedSentence = sentence;">
+                         (mouseenter)="selectedSentence = sentence;"
+                         (mouseleave)="selectedSentence = null;">
                         <div class="sentence" style="padding-top: 5px;font-size: 13px; text-align: justify"
                              [ngClass]="{'active-sentence': selectedSentence == sentence}">
                             <span style="width: 45%;display:inline-block;vertical-align: top;">
-
                                 <a style="text-decoration: none; color: black; vertical-align: middle;"
                                    [id]="'sentence-' + sentence.id"
                                    [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]">
-                                    {{sentence.source | textDisplay}}
+                                    <span *ngFor="let word of textPipe.transform(sentence.source).split(' ')"
+                                          class="source-word"
+                                          [style.background-color]="isHighlighted(word) ? '#ffa50091' : none">
+                                        {{word}}
+                                    </span>
+
                                 </a>
                             </span>
                             <span style="width: 45%;display: inline-block; vertical-align: top;padding-left: 10px;">
                                 <a style="text-decoration: none; color: black; vertical-align: middle;"
                                    [id]="'translation-sentence-' + sentence.id"
                                    [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]">
-                                    {{sentence.translation | textDisplay:true}}
+
+                                    <span class="target-word"
+                                          *ngFor="let word of textPipe.transform(sentence.translation, true).split(' ');let j = index;"
+                                          ya
+                                          [style.background-color]="isHighlightedTarget(sentence, word, j) ? '#ffa50091' : none">
+                                        {{word}}
+                                    </span>
                                 </a>
                             </span>
                             <button style="" type="button"
