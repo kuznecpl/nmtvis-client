@@ -63,7 +63,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
         if (changes.hoverTopic) {
             var currValue = changes.hoverTopic.currentValue;
             this.onTopicHover(currValue);
-            
+
         }
     }
 
@@ -72,7 +72,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             return;
         }
 
-        var margin = {top: 30, right: 10, bottom: 20, left: -100},
+        var margin = {top: 30, right: 10, bottom: 20, left: -90},
             width = 1000 - margin.left - margin.right,
             height = 170 - margin.top - margin.bottom;
 
@@ -362,12 +362,12 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
     }
 
     isMatch(topic, sentence) {
-        return sentence.source.replace(/@@ /g, "").trim().toLowerCase().indexOf(topic.name) >= 0;
+        return sentence.source.replace(/@@ /g, "").trim().toLowerCase().indexOf(topic.name.toLowerCase()) >= 0;
     }
 
     isTopicMatch(sentence) {
         for (let topic of this.topics) {
-            if (topic.active && sentence.source.replace(/@@ /g, "").trim().toLowerCase().indexOf(topic.name) < 0) {
+            if (topic.active && sentence.source.replace(/@@ /g, "").trim().toLowerCase().indexOf(topic.name.toLowerCase()) < 0) {
                 return false;
             }
         }

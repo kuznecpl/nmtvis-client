@@ -30,3 +30,11 @@
     overflow: hidden;
     padding: 5px;
 }
+
+.zoom-buttons {
+    position: absolute;
+    float: right;
+    right: 90px;
+    top: 245px;
+    margin-top: 10px;
+}

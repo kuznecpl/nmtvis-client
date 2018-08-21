@@ -19,19 +19,25 @@ body {
     fill: none;
     stroke: #ccc;
     stroke-width: 2px;
+    stroke-dasharray: 7px;
 }
 
 .golden-link {
     fill: none;
     stroke: #ffcc00;
-    stroke-width: 4px;
+    stroke-width: 2px;
 }
 
 .candidate-link {
     fill: none;
     stroke: #ccc;
     stroke-dasharray: 4px;
-    stroke-width: 3px;
+    stroke-width: 2px;
+}
+
+.bpe-link {
+    stroke-width: 4px;
+    stroke-dasharray: none;
 }
 
 circle:hover {

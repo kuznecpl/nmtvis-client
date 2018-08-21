@@ -236,13 +236,40 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
         var that = this;
         var textWidth = 70;
         var leftMargin = 120;
-        var w = (source.split(" ").length + 1) * textWidth + leftMargin;
-        w = Math.max(w, translation.split(" ").length * 70 + leftMargin);
+
+        var maxTextLength = 10;
+        var barPadding = 2;
+        var barWidthScale = d3.scaleLinear().domain([1, maxTextLength]).range([8, 70]).clamp(true);
+
+        var sourceWords = source.split(" ");
+        sourceWords.push("EOS")
+        var targetWords = translation.split(" ");
+
+        var xTargetValues = {0: 0};
+        for (var i = 1; i < targetWords.length; i++) {
+            xTargetValues[i] = xTargetValues[i - 1] + 0.5 * barWidthScale(targetWords[i].length)
+                + 0.5 * barWidthScale(targetWords[i - 1].length) + barPadding;
+            if (!targetWords[i - 1].endsWith("@@")) {
+                xTargetValues[i] += 8;
+            }
+        }
+
+        var xSourceValues = {0: 0};
+        for (var i = 1; i < sourceWords.length; i++) {
+            xSourceValues[i] = xSourceValues[i - 1] + 0.5 * barWidthScale(sourceWords[i].length)
+                + 0.5 * barWidthScale(sourceWords[i - 1].length) + barPadding;
+            if (!sourceWords[i - 1].endsWith("@@")) {
+                xSourceValues[i] += 8;
+            }
+        }
+
+        var w = Math.max(xSourceValues[sourceWords.length - 1] + 0.5 * barWidthScale(sourceWords.slice(-1)[0].length),
+            xTargetValues[targetWords.length - 1] + 0.5 * barWidthScale(targetWords.slice(-1)[0].length)) + leftMargin;
         var margin = {top: 20, right: 20, bottom: 20, left: leftMargin},
             width = w - margin.left - margin.right,
             height = 100 - margin.top - margin.bottom;
 
-        var attentionScale = d3.scaleLinear().domain([0, 1]).range([0, 8]);
+        var attentionScale = d3.scaleLinear().domain([0, 1]).range([0, 5]);
 
         // append the svg object to the body of the page
         // appends a 'group' element to 'svg'
@@ -258,60 +285,11 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
         var topY = 10;
         var bottomY = 70;
 
-        //var sourceWords = ["this", "is"];
-        //var targetWords = ["das", "ist", "test"];
-
         var sourceWords = source.split(" ");
         sourceWords.push("EOS")
         var targetWords = translation.split(" ");
-        console.log("Translation is " + this.translation);
 
-        //var attention = [[0, 1], [1, 0], [0.5, 0.5]];
         var attention = this.attention;
-
-        var tr = svg.append('g').selectAll('g').data(attention).enter().append("g");
-
-        tr.each(function (d, i) {
-            d.j = i;
-        })
-
-        var j = -1;
-        tr.selectAll('path').data(function (d) {
-            return d;
-        })
-            .enter()
-            .append("path")
-            .classed("attention-line", true)
-            .attr("d", function (d, i) {
-                if (i == 0) {
-                    j++;
-                }
-
-                d3.select(this).attr('source-id', i + "");
-                d3.select(this).attr('target-id', j + "");
-
-                var pos = [{x: textWidth * i, y: topY + 5}, {x: textWidth * i, y: (topY + bottomY - 15) / 2}, {
-                    x: textWidth * j,
-                    y: (topY + bottomY - 15) / 2
-                }, {
-                    x: j * textWidth,
-                    y: bottomY - 15
-                }];
-                var line = d3.line().curve(d3.curveBundle)
-                    .x(function (d: any) {
-                        return d.x;
-                    })
-                    .y(function (d: any) {
-                        return d.y;
-                    });
-                return line(pos);
-            })
-            .attr("stroke-width", function (d) {
-                return attentionScale(d) + "px";
-            })
-            .attr("visibility", function (d, i) {
-                return d < 0.3 ? "hidden" : "visible";
-            });
 
         svg.append('text').attr("y", topY).attr("x", -textWidth - 50).style("font-weight", "bold")
             .style("text-anchor", "left")
@@ -325,12 +303,14 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
         sourceEnter.append("rect")
             .attr("x", function (d, i) {
-                return textWidth * (i - 0.5);
+                return xSourceValues[i] - 0.5 * barWidthScale(d.length);
             })
             .attr("y", function (d, i) {
                 return topY - 15;
             })
-            .attr("width", textWidth - 5)
+            .attr("width", function (d) {
+                return barWidthScale(d.length);
+            })
             .attr("height", 20)
             .classed("source-word-box", true)
             .attr("id", function (d, i) {
@@ -359,13 +339,13 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
         sourceEnter.append("g")
             .attr("transform", function (d, i) {
-                var x = textWidth * i;
+                var x = xSourceValues[i];
                 var y = topY;
                 return "translate(" + x + "," + y + ")";
             })
             .append("text")
             .attr("transform", function (d) {
-                var xScale = d.length <= 8 ? 1 : 8 / d.length;
+                var xScale = d.length <= maxTextLength ? 1 : maxTextLength / d.length;
                 return "scale(" + xScale + ",1)"
             })
             .classed("source-word-text", true)
@@ -377,17 +357,19 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
             })
             .style("text-anchor", "middle");
 
+        var targetEnter = svg.append('g').selectAll('text').data(targetWords).enter();
 
-        var targetEnter = svg.append('g').selectAll('text').data(targetWords).enter()
 
         targetEnter.append("rect")
             .attr("x", function (d, i) {
-                return textWidth * (i - 0.5) + 5;
+                return xTargetValues[i] - 0.5 * barWidthScale(d.length);
             })
             .attr("y", function (d, i) {
                 return bottomY - 15;
             })
-            .attr("width", textWidth - 10)
+            .attr("width", function (d) {
+                return barWidthScale(d.length);
+            })
             .attr("height", 20)
             .classed("target-word-box", true)
             .attr("id", function (d, i) {
@@ -417,13 +399,13 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
         targetEnter.append("g")
             .attr("transform", function (d, i) {
-                var x = textWidth * i;
+                var x = xTargetValues[i];
                 var y = bottomY;
                 return "translate(" + x + "," + y + ")";
             })
             .append("text")
             .attr("transform", function (d) {
-                var xScale = d.length <= 8 ? 1 : 8 / d.length;
+                var xScale = d.length <= maxTextLength ? 1 : maxTextLength / d.length;
                 return "scale(" + xScale + ",1)"
             })
             .classed("target-word-text", true)
@@ -434,6 +416,55 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
                 return that.decodeText(d);
             })
             .style("text-anchor", "middle");
+
+
+        var tr = svg.append('g').selectAll('g').data(attention).enter().append("g");
+
+        tr.each(function (d, i) {
+            d.j = i;
+        })
+
+        var j = -1;
+        tr.selectAll('path').data(function (d) {
+            return d;
+        })
+            .enter()
+            .append("path")
+            .classed("attention-line", true)
+            .attr("d", function (d, i) {
+                if (i == 0) {
+                    j++;
+                }
+
+                d3.select(this).attr('source-id', i + "");
+                d3.select(this).attr('target-id', j + "");
+
+                var pos = [{x: xSourceValues[i], y: topY + 5}, {x: xSourceValues[i], y: topY + 15},
+                    {
+                        x: (xTargetValues[j] + xSourceValues[i]) / 2,
+                        y: (topY + bottomY - 15) / 2
+                    }, {
+                        x: xTargetValues[j],
+                        y: bottomY - 25,
+                    }, {
+                        x: xTargetValues[j],
+                        y: bottomY - 15
+                    }];
+                var line = d3.line().curve(d3.curveBundle.beta(1))
+                    .x(function (d: any) {
+                        return d.x;
+                    })
+                    .y(function (d: any) {
+                        return d.y;
+                    });
+                return line(pos);
+            })
+            .attr("stroke-width", function (d) {
+                return attentionScale(d) + "px";
+            })
+            .attr("visibility", function (d, i) {
+                return d < 0.3 ? "hidden" : "visible";
+            });
     }
 
     encodeText(text) {

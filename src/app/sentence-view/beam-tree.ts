@@ -45,6 +45,16 @@ export class BeamTree {
             })
             .call(this.zoom);
 
+        d3.select('#zoom-in').on('click', function () {
+            // Smooth zooming
+            tree.zoom.scaleBy(tree.svg.transition().duration(500), 1.3);
+        });
+
+        d3.select('#zoom-out').on('click', function () {
+            // Ordinal zooming
+            tree.zoom.scaleBy(tree.svg.transition().duration(500), 1 / 1.3);
+        });
+
         var i = 0,
             duration = 500,
             root;
@@ -106,14 +116,16 @@ export class BeamTree {
         var nodes = treeData.descendants(),
             links = treeData.descendants().slice(1);
 
-        var scale = d3.scaleLinear().domain([1, 10]).range([30, 0]);
+        var scale = d3.scaleLinear().domain([1, 10]).range([55, 0]);
 
         nodes.forEach(function (d) {
 
-            if (!d.children) {
-                d.y = d.parent.y + 80 - scale(that.decodeText(d.data.name).length);
-            } else if (d.parent) {
-                d.y = d.parent.y + 80 - scale(that.decodeText(d.data.name).length);
+            if (!d.children || d.parent) {
+                let multiChildOffset = d.parent.children.length > 1 ? -20 : 0;
+                let bpeOffset = d.parent.data.name.endsWith("@@") ? 16 : 0;
+                let isCandidateOffset = d.data.isCandidate ? -20 : 0;
+                let len = that.decodeText(d.parent.data.name).length / 2 + that.decodeText(d.data.name).length / 2;
+                d.y = d.parent.y + 80 - scale(len) - bpeOffset - isCandidateOffset - multiChildOffset;
             } else {
                 d.y = 0;
             }
@@ -177,7 +189,7 @@ export class BeamTree {
             .attr('class', function (d) {
                 return "node";
             })
-            .attr('r', 10)
+            .attr('r', 8)
             .style("fill", function (d) {
                 return beamTree.colorScale(d.data.logprob);
             });
@@ -190,17 +202,18 @@ export class BeamTree {
             })
             .attr("text-anchor", function (d) {
                 //return d.children ? "end" : "start";
-                return "end";
+                return "middle";
             })
             .style("pointer-events", "none")
-            .style("font-weight", "bold")
+            //.style("font-weight", "bold")
             .style("font-size", "14px")
             .text(function (d) {
                 var logprob = d.data.logprob ? d.data.logprob.toString() : "";
 
                 var path = beamTree.getPath(d);
                 if (path in that.correctionMap && that.correctionMap[path] === d.data.name) {
-                    return that.decodeText(d.data.name) + "*";
+                    // This nodes was corrected, e.g. insert a '*'
+                    return that.decodeText(d.data.name);
                 }
 
                 return that.decodeText(d.data.name);
@@ -217,7 +230,7 @@ export class BeamTree {
             })
             .attr("text-anchor", function (d) {
                 //return d.children ? "end" : "start";
-                return "end";
+                return "middle";
             });
 
         nodeUpdate.select('text')
@@ -226,7 +239,7 @@ export class BeamTree {
             })
             .attr("text-anchor", function (d) {
                 //return d.children ? "end" : "start";
-                return "end";
+                return "middle";
             })
             .text(function (d) {
                 var logprob = d.data.logprob ? d.data.logprob.toString() : "";
@@ -240,7 +253,7 @@ export class BeamTree {
             });
         // Update the node attributes and style
         nodeUpdate.select('circle.node')
-            .attr('r', 10)
+            .attr('r', 8)
             .style("fill", function (d) {
                 return beamTree.colorScale(d.data.logprob);
             })
@@ -274,18 +287,29 @@ export class BeamTree {
         // Enter any new links at the parent's previous position.
         var linkEnter = link.enter().insert('path', "g")
             .attr("class", function (d) {
+                var classes = ["link"];
                 if (d.data.isCandidate) {
-                    return "link candidate-link"
+                    classes.push("candidate-link")
                 } else if (d.data.is_golden) {
-                    return "link golden-link";
-                } else {
-                    return "link";
+                    classes.push("golden-link");
                 }
+                if (d.parent.data.name.endsWith("@@")) {
+                    classes.push("bpe-link");
+                }
+                return classes.join(" ");
             })
             .attr('d', function (d) {
                 var o = {x: source.x0, y: source.y0}
                 return beamTree.diagonal(o, o)
             });
+        /*
+            .style('stroke-dasharray', function (d) {
+                if (d.parent.data.name.endsWith("@@")) {
+                    return "2px";
+                } else {
+                    return "none";
+                }
+            });*/
 
         // UPDATE
         var linkUpdate = linkEnter.merge(link);
@@ -295,13 +319,16 @@ export class BeamTree {
             .transition()
             .duration(duration)
             .attr("class", function (d) {
+                var classes = ["link"];
                 if (d.data.isCandidate) {
-                    return "link candidate-link"
+                    classes.push("candidate-link")
                 } else if (d.data.is_golden) {
-                    return "link golden-link";
-                } else {
-                    return "link";
+                    classes.push("golden-link");
                 }
+                if (d.parent.data.name.endsWith("@@")) {
+                    classes.push("bpe-link");
+                }
+                return classes.join(" ");
             })
             .attr('d', function (d) {
                 return beamTree.diagonal(d, d.parent)
@@ -582,6 +609,7 @@ export class BeamTree {
         }
 
         d3.select(el).select("text").style("font-size", "16px");
+        d3.select(el).select("text").style("font-weight", "bold");
         d3.select(el).select("circle").style("stroke", "#ffcc00");
         this.hoveredNode = el;
     }
@@ -590,6 +618,7 @@ export class BeamTree {
         var element = d3.select(el);
         this.that.clearAttentionSelection();
         d3.select(el).select("text").style("font-size", "14px");
+        d3.select(el).select("text").style("font-weight", "normal");
     }
 
     // Creates a curved (diagonal) path from parent to the child node

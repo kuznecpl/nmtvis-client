@@ -48,19 +48,70 @@ export class DocumentsOverviewComponent implements OnInit {
 
     isHighlighted(word) {
         for (var topic of this.topics) {
-            if (topic.active && word.trim().toLowerCase().indexOf(topic.name) >= 0) {
+            if (topic.active && word.trim().toLowerCase().indexOf(topic.name.toLowerCase()) >= 0) {
                 return true;
             }
         }
         return false;
     }
 
-    isHighlightedTarget(sentence, word, index) {
+    isHighlightedTarget(sentence, word, target_index) {
+        let bpe_target = sentence.translation.slice(0, -4).split(" ");
+        let source = this.textPipe.transform(sentence.source).split(" ");
+        let target = this.textPipe.transform(sentence.translation, true).split(" ");
+        let bpe_source = sentence.source.split(" ");
+        let attention = sentence.attention;
 
+        var targetToBpe = {};
+        var currentTargetIndex = 0;
+        for (var j = 0; j < bpe_target.length; j++) {
+            if (!(currentTargetIndex in targetToBpe)) {
+                targetToBpe[currentTargetIndex] = [];
+            }
+            targetToBpe[currentTargetIndex].push(j);
+            if (!bpe_target[j].endsWith('@@')) {
+                currentTargetIndex++;
+            }
+        }
+        var target_bpe_indices = targetToBpe[target_index];
+        var source_bpe_indices = [];
+
+        // Get all source bpe indices of affected words
+        for (let target_bpe_index of target_bpe_indices) {
+            for (let j = 0; j < attention[target_bpe_index].length; j++) {
+                if (attention[target_bpe_index][j] > 0.3) {
+                    if (source_bpe_indices.indexOf(j) < 0) {
+                        source_bpe_indices.push(j);
+                    }
+                }
+            }
+        }
+
+        var bpeToSource = {};
+        var currentSourceIndex = 0;
+        for (var j = 0; j < bpe_source.length; j++) {
+            bpeToSource[j] = currentSourceIndex;
+
+            if (!bpe_source[j].endsWith('@@')) {
+                currentSourceIndex++;
+            }
+        }
+
+        var source_indices = [];
+        for (let source_bpe_index of source_bpe_indices) {
+            source_indices.push(bpeToSource[source_bpe_index]);
+        }
+
+        for (let source_index of source_indices) {
+            if (source[source_index] && this.isHighlighted(source[source_index])) {
+                return true;
+            }
+        }
+        return false;
     }
 
     isTopicMatch(text, topic) {
-        return text.trim().toLowerCase().indexOf(topic.name) >= 0;
+        return text.trim().toLowerCase().indexOf(topic.name.toLowerCase()) >= 0;
     }
 
     addTopic(topicName) {
@@ -77,9 +128,6 @@ export class DocumentsOverviewComponent implements OnInit {
         var filteredSentences = [];
         var words = d3.selectAll('.source-word');
         var that = this;
-        for (var topic of that.topics) {
-            topic.occurrences = 0;
-        }
 
         for (let sentence of currentSentences) {
             var hasAllTopics = true;
@@ -102,7 +150,6 @@ export class DocumentsOverviewComponent implements OnInit {
             for (var topic of that.topics) {
                 if (topic.active && el.text().trim().toLowerCase().indexOf(topic.name) >= 0) {
                     highlight = true;
-                    topic.occurrences += 1;
                 }
             }
         });
@@ -215,6 +262,7 @@ export class DocumentsOverviewComponent implements OnInit {
     onClick(document, callback = () => {
     }) {
         this.selectedDocument = document;
+        this.topics = document.keyphrases;
         this.loading = true;
 
         this.documentService.getSentences(document.id)
