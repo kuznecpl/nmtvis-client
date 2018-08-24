@@ -19,6 +19,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
     title = 'DNN Vis';
     sentence = [];
     translation = [];
+    editedTranslation;
     curr = [];
     heatmap = "";
     inputSentence = "";
@@ -220,10 +221,11 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
     onCurrentAttentionChange() {
         for (var i = 0; i < this.beamAttention.length; i++) {
-            console.log(d3.select("#source-word-box-" + i).style("opacity", this.beamAttention[i]));
             if (this.beamAttention[i] > 0.3) {
                 d3.select("#source-word-text-" + i).style("font-weight", "bold");
             }
+            let opacity = this.beamAttention[i] < 0.1 ? 0 : Math.max(0.3, this.beamAttention[i]);
+            d3.select("#source-word-box-" + i).style("opacity", opacity);
         }
     }
 
@@ -264,7 +266,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
         }
 
         var w = Math.max(xSourceValues[sourceWords.length - 1] + 0.5 * barWidthScale(sourceWords.slice(-1)[0].length),
-            xTargetValues[targetWords.length - 1] + 0.5 * barWidthScale(targetWords.slice(-1)[0].length)) + leftMargin;
+                xTargetValues[targetWords.length - 1] + 0.5 * barWidthScale(targetWords.slice(-1)[0].length)) + leftMargin;
         var margin = {top: 20, right: 20, bottom: 20, left: leftMargin},
             width = w - margin.left - margin.right,
             height = 100 - margin.top - margin.bottom;
@@ -491,6 +493,8 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
     onAcceptTranslation() {
 
+        console.log("Edited: " + this.editedTranslation);
+
         this.http.post('http://46.101.224.19:5000/api/correctTranslation', {
             translation: this.translation.join(" "),
             beam: this.beam,
@@ -525,6 +529,10 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
     addEvent(type, val = "") {
         this.events.push({"type": type, "time": this.experimentMetrics.timeSpent, "val": val})
+    }
+
+    onTranslationEdit($event) {
+        this.editedTranslation = this.encodeText($event);
     }
 
     onClick() {

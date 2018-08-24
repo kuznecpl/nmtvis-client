@@ -19,6 +19,8 @@ export class DocumentsOverviewComponent implements OnInit {
     selectedSentence;
     newDocumentName;
     showCorrected = true;
+    retrainText = "Retrain";
+    retranslateText = "Retranslate";
     metrics = [
         {name: "coverage_penalty", color: "lightblue", shortname: "CP"},
         {name: "coverage_deviation_penalty", color: "green", shortname: "CDP"},
@@ -148,7 +150,7 @@ export class DocumentsOverviewComponent implements OnInit {
             var highlight = false;
 
             for (var topic of that.topics) {
-                if (topic.active && el.text().trim().toLowerCase().indexOf(topic.name) >= 0) {
+                if (topic.active && el.text().trim().toLowerCase().indexOf(topic.name.toLowerCase()) >= 0) {
                     highlight = true;
                 }
             }
@@ -277,16 +279,20 @@ export class DocumentsOverviewComponent implements OnInit {
     }
 
     onRetrainClick() {
+        this.retrainText = "Training...";
         this.documentService.retrain(this.selectedDocument.id)
             .subscribe(res => {
+                this.retrainText = "Retrain";
                 console.log(res);
             })
     }
 
     onRetranslateClick() {
+        this.retranslateText = "Translating...";
         this.documentService.retranslate(this.selectedDocument.id)
             .subscribe(res => {
                 this.onClick(this.selectedDocument);
+                this.retranslateText = "Retranslate";
             })
     }
 

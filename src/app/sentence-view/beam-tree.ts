@@ -19,7 +19,7 @@ export class BeamTree {
     build() {
         var margin = {top: 20, right: 30, bottom: 30, left: 50},
             width = 1100 - margin.left - margin.right,
-            height = 410 - margin.top - margin.bottom;
+            height = 390 - margin.top - margin.bottom;
 
         // append the svg object to the body of the page
         // appends a 'group' element to 'svg'
@@ -104,6 +104,14 @@ export class BeamTree {
         this.update(this.root);
     }
 
+    calculateTextWidth(text) {
+        var text = this.svg.append("text").text(text).style("font-size", "14px");
+        var width = text.node().getComputedTextLength();
+        text.remove();
+
+        return width;
+    }
+
     update(source) {
 
         // Assigns the x and y position for the nodes
@@ -122,10 +130,14 @@ export class BeamTree {
 
             if (!d.children || d.parent) {
                 let multiChildOffset = d.parent.children.length > 1 ? -20 : 0;
-                let bpeOffset = d.parent.data.name.endsWith("@@") ? 16 : 0;
-                let isCandidateOffset = d.data.isCandidate ? -20 : 0;
-                let len = that.decodeText(d.parent.data.name).length / 2 + that.decodeText(d.data.name).length / 2;
-                d.y = d.parent.y + 80 - scale(len) - bpeOffset - isCandidateOffset - multiChildOffset;
+                let textWidth = beamTree.calculateTextWidth(that.decodeText(d.data.name));
+                let parentWidth = beamTree.calculateTextWidth(that.decodeText(d.parent.data.name));
+                var padding = 15;
+
+                if (d.parent.data.name.endsWith("@@") && !d.data.isCandidate) {
+                    padding = 0;
+                }
+                d.y = d.parent.y + 0.5 * textWidth + 0.5 * parentWidth + padding;
             } else {
                 d.y = 0;
             }
@@ -143,6 +155,9 @@ export class BeamTree {
         var nodeEnter = node.enter().append('g')
             .attr('class', 'node')
             .attr("transform", function (d) {
+                if (d.parent && d.parent.y !== undefined) {
+                    return "translate(" + d.parent.y + "," + d.parent.x + ")";
+                }
                 return "translate(" + source.y0 + "," + source.x0 + ")";
             })
             .on('click', function (d) {
@@ -205,7 +220,6 @@ export class BeamTree {
                 return "middle";
             })
             .style("pointer-events", "none")
-            //.style("font-weight", "bold")
             .style("font-size", "14px")
             .text(function (d) {
                 var logprob = d.data.logprob ? d.data.logprob.toString() : "";
@@ -246,14 +260,20 @@ export class BeamTree {
 
                 var path = beamTree.getPath(d);
                 if (path in that.correctionMap && that.correctionMap[path] === d.data.name) {
-                    return that.decodeText(d.data.name) + "*";
+                    // Could add '*' here
+                    return that.decodeText(d.data.name);
                 }
 
                 return that.decodeText(d.data.name);
             });
         // Update the node attributes and style
         nodeUpdate.select('circle.node')
-            .attr('r', 8)
+            .attr('r', function (d) {
+                if (d.data.name.endsWith("@@") || (d.parent && d.parent.data.name.endsWith("@@"))) {
+                    return 7;
+                }
+                return 8;
+            })
             .style("fill", function (d) {
                 return beamTree.colorScale(d.data.logprob);
             })
@@ -264,6 +284,9 @@ export class BeamTree {
         var nodeExit = node.exit().transition()
             .duration(duration)
             .attr("transform", function (d) {
+                if (d.parent) {
+                    return "translate(" + d.parent.y0 + "," + d.parent.x0 + ")";
+                }
                 return "translate(" + source.y + "," + source.x + ")";
             })
             .remove();
@@ -299,17 +322,20 @@ export class BeamTree {
                 return classes.join(" ");
             })
             .attr('d', function (d) {
-                var o = {x: source.x0, y: source.y0}
+                var o = {x: source.x0, y: source.y0};
+                if (d.parent) {
+                    o = {x: d.parent.x, y: d.parent.y};
+                }
                 return beamTree.diagonal(o, o)
             });
         /*
-            .style('stroke-dasharray', function (d) {
-                if (d.parent.data.name.endsWith("@@")) {
-                    return "2px";
-                } else {
-                    return "none";
-                }
-            });*/
+         .style('stroke-dasharray', function (d) {
+         if (d.parent.data.name.endsWith("@@")) {
+         return "2px";
+         } else {
+         return "none";
+         }
+         });*/
 
         // UPDATE
         var linkUpdate = linkEnter.merge(link);
@@ -339,7 +365,10 @@ export class BeamTree {
             .transition()
             .duration(duration)
             .attr('d', function (d) {
-                var o = {x: source.x, y: source.y}
+                var o = {x: source.x, y: source.y};
+                if (d.parent) {
+                    o = {x: d.parent.x, y: d.parent.y};
+                }
                 return beamTree.diagonal(o, o)
             })
             .remove();

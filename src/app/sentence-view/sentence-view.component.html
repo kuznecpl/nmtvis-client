@@ -1,4 +1,4 @@
-<mat-sidenav-container>
+<mat-sidenav-container xmlns:display="http://www.w3.org/1999/xhtml">
     <mat-sidenav #sidenav mode="over" [(opened)]="sideOpened" style="width: 400px;">
         <div *ngFor="let sentence of documentSentences">
             <button style="" type="button"
@@ -19,11 +19,11 @@
         </div>
     </mat-sidenav>
 
-    <mat-sidenav-content style="min-height: 800px;">
+    <mat-sidenav-content>
         <form class="translation-form">
-            <mat-form-field class="example-full-width" style="width: 82%;">
-                <textarea name="first" style="font-size: 14px;" [(ngModel)]="inputSentence" matInput
-                          placeholder="German Sentence" value=""></textarea>
+            <mat-form-field class="example-full-width" style="width: 90%;">
+                <textarea name="first" style="font-size: 13px;" rows="1" [(ngModel)]="inputSentence" matInput
+                          placeholder="Source Sentence" value=""></textarea>
             </mat-form-field>
         </form>
 
@@ -64,9 +64,8 @@
         </div>
 
         <div>
-
-            <div style="height: 495px; overflow-y: auto; margin-right: 10px;margin-top: 20px;display: inline-block;padding-right: 20px;vertical-align: top;float: left; margin-left: 100px;">
-                <span style="font-weight: bold;">Attention Weights</span>
+            <div style="height: 420px; overflow-y: auto; margin-right: 10px;margin-top: 20px;display: inline-block;padding-right: 20px;vertical-align: top;float: left; margin-left: 100px;">
+                <span style="font-weight: bold;">Attention View</span>
 
                 <div style="text-align: left;font-size: 12px; max-height: 25px;"
                      *ngFor="let word of sentence;let i = index">
@@ -81,9 +80,9 @@
             <div style="display:inline-block; max-width: 1100px;float: left;margin-right: 50px;" id="tree">
                 <div>
                     <form class="example-form">
-                        <span style="font-weight: bold;margin-right: 30px;">Beam Search</span>
+                        <span style="font-weight: bold;margin-right: 30px;">Beam Search View</span>
                         <span style="font-weight: bold">Size</span>
-                        <mat-form-field style="width: 50px;">
+                        <mat-form-field style="width: 50px;height: 20px;">
                             <input matInput [(ngModel)]="beamSize" (change)="beamSizeChange()" type="number"
                                    name="beamSize"
                                    value="3" min="1"
@@ -92,7 +91,7 @@
                                    style="text-align:center;">
                         </mat-form-field>
                         <span style="font-weight: bold">Length</span>
-                        <mat-form-field style="width: 50px;">
+                        <mat-form-field style="width: 50px;height: 20px;">
                             <input matInput [(ngModel)]="beamLength" (change)="beamSizeChange()" type="number"
                                    name="beamLength"
                                    value="0.5" min="0"
@@ -102,7 +101,7 @@
                                    style="text-align:center;">
                         </mat-form-field>
                         <span style="font-weight: bold">Coverage</span>
-                        <mat-form-field style="width: 50px;">
+                        <mat-form-field style="width: 50px;height: 20px;">
                             <input matInput [(ngModel)]="beamCoverage" (change)="beamSizeChange()"
                                    type="number"
                                    name="beamCoverage"
@@ -138,14 +137,21 @@
                 </div>
             </div>
         </div>
-        <div>
-            <button style="min-width: 200px;" type="button" (click)="onClick()" mat-raised-button color="primary">
-                Translate
-            </button>
-            <button style="min-width: 200px;background-color: green" type="button" (click)="onAcceptTranslation()"
+        <form class="translation-form">
+            <mat-form-field class="example-full-width" style="width: 82%;">
+                <textarea name="translation" style="font-size: 14px;font-weight: bold;" rows="1" [ngModel]="translation.join(' ') | textDisplay: true " matInput
+                          (ngModelChange)="onTranslationEdit($event)"
+                          placeholder="Translation" value=""></textarea>
+            </mat-form-field>
+            <button style="background-color: green;" type="button"
+                    (click)="onAcceptTranslation()"
                     mat-raised-button
                     color="primary">
-                Accept Translation
+                Accept
+            </button>
+            <button style="min-width: 100px;display:none" type="button" (click)="onClick()" mat-raised-button
+                    color="primary">
+                Translate
             </button>
             <mat-progress-spinner *ngIf="loading" style="margin:auto;width:10px;height:10px;"
                                   class="example-margin"
@@ -153,7 +159,7 @@
                                   [diameter]="40"
                                   mode="indeterminate">
             </mat-progress-spinner>
-        </div>
+        </form>
     </mat-sidenav-content>
 </mat-sidenav-container>
 

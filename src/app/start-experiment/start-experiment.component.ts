@@ -10,56 +10,161 @@ import {ExperimentService} from '../services/experiment.service';
 export class StartExperimentComponent implements OnInit {
 
     json = {
-        questions: [
+        pages: [
             {
-                name: "age",
-                type: "text",
-                inputType: "number",
-                title: "How old are you?",
-                isRequired: true
-            },
-            {
-                type: "radiogroup",
-                name: "gender",
-                title: "What is your gender?",
-                colCount: 3,
-                isRequired: true,
-                startWithNewLine: false,
-                choices: [
-                    "Male",
-                    "Female"
+                name: "page1",
+                elements: [
+                    {
+                        type: "text",
+                        name: "question2",
+                        title: "What is your occupation?",
+                        isRequired: true
+                    },
+                    {
+                        type: "panel",
+                        name: "panel1",
+                        elements: [
+                            {
+                                type: "rating",
+                                name: "question1",
+                                title: "How do you rate your German language proficiency?",
+                                minRateDescription: "Poor",
+                                maxRateDescription: "Native Speaker"
+                            },
+                            {
+                                type: "rating",
+                                name: "question3",
+                                title: "How do you rate your English language proficiency?",
+                                minRateDescription: "Poor",
+                                maxRateDescription: "Native Speaker"
+                            }
+                        ],
+                        title: "Language Skills"
+                    }
                 ]
             },
             {
-                name: "occupation",
-                type: "text",
-                title: "What is your current occupation?",
-                startWithNewLine: false,
-                isRequired: true
+                name: "page2",
+                elements: [
+                    {
+                        type: "panel",
+                        name: "panel5",
+                        elements: [
+                            {
+                                type: "rating",
+                                name: "question4",
+                                title: "The Beam Search View was helpful for exploring different translations.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            },
+                            {
+                                type: "rating",
+                                name: "question6",
+                                title: "The Beam Search View was useful for correcting a machine-generated translation.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            },
+                            {
+                                type: "rating",
+                                name: "question5",
+                                title: "The Attention View was helpful for analysing a translation.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            },
+                            {
+                                type: "rating",
+                                name: "question7",
+                                title: "The Metrics View was useful for finding sentences that contain translation errors.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            },
+                            {
+                                type: "rating",
+                                name: "question8",
+                                title: "The Keyphrase View was useful for finding sentences that contain translation errors.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            }
+                        ],
+                        title: "Functionality"
+                    }
+                ]
             },
             {
-                type: "rating",
-                name: "german-skills",
-                title: "How would you rate your German language proficiency?",
-                minRateDescription: "Poor",
-                maxRateDescription: "Native or Native-like",
-                isRequired: true
+                name: "page3",
+                elements: [
+                    {
+                        type: "panel",
+                        name: "panel6",
+                        elements: [
+                            {
+                                type: "rating",
+                                name: "question9",
+                                title: "It was difficult to understand the visual representations in the Beam Search View.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            },
+                            {
+                                type: "rating",
+                                name: "question10",
+                                title: "It was difficult to understand the visual representations in the Attention View.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            },
+                            {
+                                type: "rating",
+                                name: "question11",
+                                title: "It was easy to understand the visual representations in the Metrics View.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            },
+                            {
+                                type: "rating",
+                                name: "question12",
+                                title: "It was difficult to interact with the visualizations.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            }
+                        ],
+                        title: "Visualization"
+                    }
+                ]
             },
             {
-                type: "rating",
-                name: "english-skills",
-                title: "How would you rate your English language proficiency?",
-                minRateDescription: "Poor",
-                maxRateDescription: "Native or Native-like",
-                isRequired: true
-            },
-            {
-                type: "rating",
-                name: "vis-skills",
-                title: "How much experience do you have with visualizations?",
-                minRateDescription: "None",
-                maxRateDescription: "A lot (Expert)",
-                isRequired: true
+                name: "page4",
+                elements: [
+                    {
+                        type: "panel",
+                        name: "panel2",
+                        elements: [
+                            {
+                                type: "comment",
+                                name: "question13",
+                                title: "What functionality or part of the system did you like and why?"
+                            },
+                            {
+                                type: "comment",
+                                name: "question14",
+                                title: "What functionality or part of the system did you dislike and why?"
+                            },
+                            {
+                                type: "comment",
+                                name: "question15",
+                                title: "Do you have any other comments, feedback or ideas regarding the system?"
+                            }
+                        ],
+                        title: "Free Form"
+                    }
+                ]
             }
         ]
     };
@@ -83,7 +188,7 @@ export class StartExperimentComponent implements OnInit {
     }
 
     onStartExperiment() {
-        this.router.navigate(["/" + this.experimentType, "document", this.documentId, "sentence", this.sentenceId]);
+        this.router.navigate(["/finish"]);
     }
 
     ngOnInit() {

@@ -11,15 +11,15 @@ import {Router} from '@angular/router';
 })
 
 export class AppComponent {
-    title = 'DNN Vis';
+    title = 'NMTVis';
 
 
     constructor(private http: HttpClient, private auth: AuthService, private router: Router) {
     }
 
     logout() {
-        this.auth.logout();
-        this.router.navigate(['/login']);
+        //this.auth.logout();
+        this.router.navigate(['/start']);
     }
 
     ngAfterContentInit() {

@@ -145,6 +145,7 @@ mat-icon {
 .selected-line {
     stroke: orange !important;
     stroke-width: 3px;
+    opacity: 1 !important;
 }
 
 polygon {
@@ -164,7 +165,6 @@ polygon:hover {
 
 .axis:hover line,
 .axis:hover path {
-    fill: none;
     stroke: #222;
     stroke-width: 2px;
 }
@@ -194,11 +194,43 @@ polygon:hover {
     font-size: 12px;
 }
 
+.sort-icon {
+    pointer-events: bounding-box;
+}
+
+.sort-icon path {
+    fill: lightgray;
+    shape-rendering: auto;
+}
+
+.sort-icon:hover path {
+    fill: gray;
+    shape-rendering: auto;
+}
+
+.active-sort-icon path {
+    fill: orange;
+    shape-rendering: none;
+}
+
+.active-sort-icon:hover path {
+    fill: orange;
+    shape-rendering: none;
+}
+
 #keyphrase-view .mat-checkbox-inner-container {
     height: 15px !important;
     width: 15px !important;
 }
 
-#keyphrase-view .mat-checkbox-label{
+#keyphrase-view .mat-checkbox-label {
     font-size: 12px;
+}
+
+#parallel-coordinates-box text {
+    cursor: default;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
