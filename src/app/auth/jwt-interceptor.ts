@@ -1,4 +1,5 @@
 import 'rxjs/add/operator/do';
+import {Observable} from 'rxjs/Observable';
 import {Injectable} from '@angular/core';
 import {
     HttpResponse,

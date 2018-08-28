@@ -11,14 +11,16 @@ export class BeamTree {
     zoom;
     colorLegend;
     hoveredNode;
+    focusNode;
+    currentInput = "";
 
     constructor(private treeData: any, private that: any) {
 
     }
 
     build() {
-        var margin = {top: 20, right: 30, bottom: 30, left: 50},
-            width = 1100 - margin.left - margin.right,
+        var margin = {top: 70, right: 30, bottom: 30, left: 50},
+            width = 1350 - margin.left - margin.right,
             height = 390 - margin.top - margin.bottom;
 
         // append the svg object to the body of the page
@@ -36,7 +38,7 @@ export class BeamTree {
 
         var tree = this;
 
-        this.zoom = d3.zoom().on("zoom", function () {
+        this.zoom = d3.zoom().scaleExtent([0.5, 2]).on("zoom", function () {
             tree.svg.attr("transform", d3.event.transform);
         });
 
@@ -53,6 +55,10 @@ export class BeamTree {
         d3.select('#zoom-out').on('click', function () {
             // Ordinal zooming
             tree.zoom.scaleBy(tree.svg.transition().duration(500), 1 / 1.3);
+        });
+
+        d3.select('body').on("keydown", function () {
+            tree.keydown(tree);
         });
 
         var i = 0,
@@ -87,7 +93,7 @@ export class BeamTree {
         //root.children.forEach(collapse);
 
         this.update(this.root);
-
+        this.center(this.root);
     }
 
     updateData(treeData) {
@@ -127,9 +133,8 @@ export class BeamTree {
         var scale = d3.scaleLinear().domain([1, 10]).range([55, 0]);
 
         nodes.forEach(function (d) {
-
             if (!d.children || d.parent) {
-                let multiChildOffset = d.parent.children.length > 1 ? -20 : 0;
+                let multiChildOffset = d.parent.children.length > 1 ? -15 : 0;
                 let textWidth = beamTree.calculateTextWidth(that.decodeText(d.data.name));
                 let parentWidth = beamTree.calculateTextWidth(that.decodeText(d.parent.data.name));
                 var padding = 15;
@@ -137,7 +142,7 @@ export class BeamTree {
                 if (d.parent.data.name.endsWith("@@") && !d.data.isCandidate) {
                     padding = 0;
                 }
-                d.y = d.parent.y + 0.5 * textWidth + 0.5 * parentWidth + padding;
+                d.y = d.parent.y + 0.5 * textWidth + 0.5 * parentWidth + padding - multiChildOffset;
             } else {
                 d.y = 0;
             }
@@ -159,6 +164,12 @@ export class BeamTree {
                     return "translate(" + d.parent.y + "," + d.parent.x + ")";
                 }
                 return "translate(" + source.y0 + "," + source.x0 + ")";
+            })
+            .attr("node-path", function (d) {
+                if (beamTree.getNodeId(beamTree.focusNode) === beamTree.getNodeId(d)) {
+                    beamTree.focusNode = d;
+                }
+                return beamTree.getNodeId(d);
             })
             .on('click', function (d) {
                 beamTree.click(d, this);
@@ -219,8 +230,6 @@ export class BeamTree {
                 //return d.children ? "end" : "start";
                 return "middle";
             })
-            .style("pointer-events", "none")
-            .style("font-size", "14px")
             .text(function (d) {
                 var logprob = d.data.logprob ? d.data.logprob.toString() : "";
 
@@ -245,6 +254,11 @@ export class BeamTree {
             .attr("text-anchor", function (d) {
                 //return d.children ? "end" : "start";
                 return "middle";
+            })
+            .each(function (d) {
+                if (beamTree.getNodeId(beamTree.focusNode) === beamTree.getNodeId(d)) {
+                    beamTree.focusNode = d;
+                }
             });
 
         nodeUpdate.select('text')
@@ -406,12 +420,16 @@ export class BeamTree {
             this.setGoldenHypothesis(d);
             this.setGoldenHypothesisBeam(this.that.beam, this.getPathList(d));
             this.that.attention = this.getBeamAttention(d);
-            this.that.translation = this.getTranslation(d);
+            this.that.translation = this.getRawTranslation(d);
             this.that.updateTranslation(this.that.sentence.join(" "), this.that.translation.join(" "));
             return;
         }
 
         if (d.data.name === "EDIT") {
+            if (this.focusNode === d) {
+                this.center(d.parent, "left");
+            }
+
             var that = this.that;
             that.partial = this.getPath(d);
 
@@ -461,6 +479,12 @@ export class BeamTree {
             return;
         }
 
+        if (this.isCandidateNode(d)) {
+            if (this.focusNode === d) {
+                this.center(d.parent, "left");
+            }
+        }
+
 
         if (this.isCandidateNode(d) && d.parent && d.parent.data.name === "UNK") {
             // UNK replacement
@@ -469,7 +493,7 @@ export class BeamTree {
             this.addToDocumentUnkMap(d.parent, d.data.name);
 
             this.that.onCorrectionChange(d.data.name);
-            this.that.addEvent("unk-replace", this.getPath(d) + "=>" + d.data.name;
+            this.that.addEvent("unk-replace", this.getPath(d) + "=>" + d.data.name);
         }
         else if (this.isCandidateNode(d)) {
             this.addToCorrectionMap(d.data.name, this.getPath(d));
@@ -508,6 +532,39 @@ export class BeamTree {
     isCandidateNode(d) {
         var beamNode = this.getBeamNode(this.treeData, this.getPathList(d).slice(1));
         return beamNode.isCandidate === true;
+    }
+
+    hasEditChild(d) {
+        for (let child of d.children) {
+            if (child.isEdit) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    getEditChild(d) {
+        for (let child of d.children) {
+            if (child.isEdit) {
+                return child;
+            }
+        }
+        return null;
+    }
+
+    removeEditChild(d) {
+        if (!d) {
+            return;
+        }
+        var index = -1;
+        for (var i = 0; i < d.children.length; i++) {
+            if (d.children[i].isEdit) {
+                index = i;
+            }
+        }
+        if (index > -1) {
+            d.children.splice(index, 1);
+        }
     }
 
     hasCandidateNodes(d) {
@@ -634,20 +691,143 @@ export class BeamTree {
         }
 
         if (this.hoveredNode) {
-            d3.select(this.hoveredNode).select("circle").style("stroke", "white");
+            //d3.select(this.hoveredNode).select("circle").style("stroke", "white");
         }
 
-        d3.select(el).select("text").style("font-size", "16px");
-        d3.select(el).select("text").style("font-weight", "bold");
-        d3.select(el).select("circle").style("stroke", "#ffcc00");
+        //d3.select(el).classed("focus", true);
         this.hoveredNode = el;
     }
 
     mouseout(d, el) {
         var element = d3.select(el);
         this.that.clearAttentionSelection();
-        d3.select(el).select("text").style("font-size", "14px");
-        d3.select(el).select("text").style("font-weight", "normal");
+        //d3.select(el).classed("focus", false);
+    }
+
+
+    center(d, dir) {
+        if (true) {
+            this.getNodeSelection(this.focusNode).classed("focus", false);
+        }
+        if (dir === "left" || dir === "up" || dir === "down") {
+            this.getNodeSelection(this.focusNode).classed("focus-path", false);
+        }
+        console.log("center " + d.data.name);
+
+        this.focusNode = d;
+        var node = d3.select('[node-path="' + this.getNodeId(d) + '"]');
+        node.classed("focus", true);
+        node.classed("focus-path", true);
+
+        if (this.focusNode) {
+            this.that.attention = this.getBeamAttention(this.focusNode);
+            this.that.translation = this.getRawTranslation(this.focusNode);
+            this.that.updateTranslation(this.that.sentence.join(" "), this.that.translation.join(" "));
+
+            this.mouseover(this.focusNode, this.getNodeSelection(this.focusNode))
+        }
+
+        var transform = this.getTransformation(this.svg.attr("transform"));
+        var xTranslate = 650 - (transform.translateX + d.y);
+        var yTranslate = 195 - (transform.translateY + d.x);
+
+
+        if (transform.translateX + d.y > 1200 || transform.translateX + d.y < 50) {
+            this.svg.transition().duration(1000)
+                .attr("transform", "translate(" + (transform.translateX + xTranslate) + "," + transform.translateY + ")");
+
+        }
+        if (transform.translateY + d.x < 30 || transform.translateY + d.x > 350) {
+            //this.svg.transition().duration(500).call(this.zoom.translateBy, 0, yTranslate);
+        }
+    }
+
+    getNodeSelection(d) {
+        return d3.select('[node-path="' + this.getNodeId(d) + '"]');
+    }
+
+    keydown(tree) {
+        switch (d3.event.keyCode) {
+            case 13: // Space
+                this.currentInput = "";
+                this.click(this.focusNode, this.getNodeSelection(this.focusNode))
+                break;
+            case 37: { // Left Arrow
+                this.currentInput = "";
+                tree.focusNode.parent ? this.center(tree.focusNode.parent, "left") : 0;
+                break;
+            }
+            case 8: { // Backspace
+                if (this.currentInput.length > 0) {
+                    this.currentInput = this.currentInput.slice(0, -1);
+                } else {
+                    tree.focusNode.parent ? this.center(tree.focusNode.parent, "left") : 0;
+                }
+
+                break;
+            }
+            case 9:
+            case 39: { // Right Arrow
+                this.currentInput = "";
+                this.center(tree.focusNode.children[0], "right");
+                break;
+            }
+            case 38: { // Up Arrow
+                this.currentInput = "";
+                if (tree.focusNode.parent && tree.focusNode.parent.children.length > 1) {
+                    // Get child index
+                    let i = tree.focusNode.parent.children.indexOf(tree.focusNode);
+                    i = i === 0 ? tree.focusNode.parent.children.length - 1 : i - 1;
+                    this.center(tree.focusNode.parent.children[i], "up");
+                }
+                break;
+            }
+            case 40: { // Down Arrow
+                this.currentInput = "";
+                if (tree.focusNode.parent && tree.focusNode.parent.children.length > 1) {
+                    // Get child index
+                    let i = tree.focusNode.parent.children.indexOf(tree.focusNode);
+                    i = i === tree.focusNode.parent.children.length - 1 ? 0 : i + 1;
+                    this.center(tree.focusNode.parent.children[i], "down");
+                }
+                break;
+            }
+        }
+
+        if (this.focusNode.isEdit) {
+            return;
+        }
+
+        var key = d3.event.key;
+        if (key.length === 1 && !(key == " " && this.currentInput.length === 0)) {
+            this.currentInput += key;
+
+            var node = this.getBeamNode(this.treeData, this.getPathList(this.focusNode).slice(1));
+            if (!this.hasEditChild(node)) {
+                node.children.push({
+                    attn: [],
+                    name: this.currentInput,
+                    children: [],
+                    logprob: -3,
+                    candidates: [],
+                    isCandidate: true,
+                    isEdit: true,
+                });
+            } else {
+                this.getEditChild(node).name = this.currentInput;
+            }
+            this.updateData(this.treeData);
+        } else if (this.currentInput.length > 0) {
+            var node = this.getBeamNode(this.treeData, this.getPathList(this.focusNode).slice(1));
+            this.getEditChild(node).name = this.currentInput;
+            this.updateData(this.treeData);
+        } else {
+            var node = this.getBeamNode(this.treeData, this.getPathList(this.focusNode).slice(1));
+            this.removeEditChild(node);
+            this.updateData(this.treeData);
+        }
+
+        d3.select('#currentBeamInput').text("Type in Correction: " + this.currentInput);
     }
 
     // Creates a curved (diagonal) path from parent to the child node
@@ -666,7 +846,11 @@ export class BeamTree {
         var path = [];
 
         while (d) {
-            path.push(d.data.name);
+            if (d.data.isEdit) {
+                path.push("<EDIT>")
+            } else {
+                path.push(d.data.name);
+            }
             d = d.parent;
         }
 
@@ -702,6 +886,17 @@ export class BeamTree {
 
         while (d) {
             path.push(this.that.decodeText(d.data.name));
+            d = d.parent;
+        }
+
+        return path.reverse().slice(1);
+    }
+
+    getRawTranslation(d) {
+        var path = [];
+
+        while (d) {
+            path.push(d.data.name);
             d = d.parent;
         }
 
@@ -827,6 +1022,27 @@ export class BeamTree {
             .text("Word Probability")
             .style("font-size", "12px");
 
+        rect
+            .append("text")
+            .attr("x", 0)
+            .attr("y", 320)
+            .text("Type in Correction: ")
+            .attr("id", "currentBeamInput")
+            .style("font-size", "12px");
+
+        rect
+            .append("text")
+            .attr("x", 0)
+            .attr("y", 340)
+            .text("Select/Edit with ENTER")
+            .style("font-size", "12px");
+        rect
+            .append("text")
+            .attr("x", 0)
+            .attr("y", 360)
+            .text("Navigate with TAB and ← → ↑ ↓")
+            .style("font-size", "12px");
+
 
         rect
             .append("text")
@@ -860,5 +1076,38 @@ export class BeamTree {
             .attr("y2", 15)
             .style("stroke", "#ffcc00")
             .style("stroke-width", "4px");
+    }
+
+    getTransformation(transform) {
+        // Create a dummy g for calculation purposes only. This will never
+        // be appended to the DOM and will be discarded once this function
+        // returns.
+        var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+        // Set the transform attribute to the provided string value.
+        g.setAttributeNS(null, "transform", transform);
+
+        // consolidate the SVGTransformList containing all transformations
+        // to a single SVGTransform of type SVG_TRANSFORM_MATRIX and get
+        // its SVGMatrix.
+        var matrix = g.transform.baseVal.consolidate().matrix;
+
+        // Below calculations are taken and adapted from the private function
+        // transform/decompose.js of D3's module d3-interpolate.
+        var {a, b, c, d, e, f} = matrix;   // ES6, if this doesn't work, use below assignment
+        // var a=matrix.a, b=matrix.b, c=matrix.c, d=matrix.d, e=matrix.e, f=matrix.f; // ES5
+        var scaleX, scaleY, skewX;
+        if (scaleX = Math.sqrt(a * a + b * b)) a /= scaleX, b /= scaleX;
+        if (skewX = a * c + b * d) c -= a * skewX, d -= b * skewX;
+        if (scaleY = Math.sqrt(c * c + d * d)) c /= scaleY, d /= scaleY, skewX /= scaleY;
+        if (a * d < b * c) a = -a, b = -b, skewX = -skewX, scaleX = -scaleX;
+        return {
+            translateX: e,
+            translateY: f,
+            rotate: Math.atan2(b, a) * 180 / Math.PI,
+            skewX: Math.atan(skewX) * 180 / Math.PI,
+            scaleX: scaleX,
+            scaleY: scaleY
+        };
     }
 }

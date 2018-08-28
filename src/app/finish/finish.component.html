@@ -4,11 +4,18 @@
 </div>
 
 <div *ngFor="let metric of metrics">
-    <div>Sentence: {{ metric.sentence}} Translation: {{ metric.translation }}</div>
-    <div>Events:</div>
-    <div *ngFor="let event of metric.events">
-        <span>{{ event.time + '|' + event.type + '|' + event.val }}</span>
+    <div *ngIf="metric">
+        <div>Sentence: {{ metric.sentence}} Translation: {{ metric.translation }}</div>
+        <div>Events:</div>
+
+        <div *ngFor="let event of metric.events">
+            <span>{{ event.time + '|' + event.type + '|' + event.val }}</span>
+        </div>
+
+        <br>
     </div>
-    <br>
 </div>
-{{ survey }}
+<div *ngFor="let question of objectKey(survey)">
+    {{ question  + ':' + survey[question]}}
+</div>
+

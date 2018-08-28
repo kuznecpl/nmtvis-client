@@ -16,24 +16,24 @@ export class StartExperimentComponent implements OnInit {
                 elements: [
                     {
                         type: "text",
-                        name: "question2",
+                        name: "occupation",
                         title: "What is your occupation?",
                         isRequired: true
                     },
                     {
                         type: "panel",
-                        name: "panel1",
+                        name: "language-panel",
                         elements: [
                             {
                                 type: "rating",
-                                name: "question1",
+                                name: "german",
                                 title: "How do you rate your German language proficiency?",
                                 minRateDescription: "Poor",
                                 maxRateDescription: "Native Speaker"
                             },
                             {
                                 type: "rating",
-                                name: "question3",
+                                name: "english",
                                 title: "How do you rate your English language proficiency?",
                                 minRateDescription: "Poor",
                                 maxRateDescription: "Native Speaker"
@@ -48,11 +48,11 @@ export class StartExperimentComponent implements OnInit {
                 elements: [
                     {
                         type: "panel",
-                        name: "panel5",
+                        name: "functional",
                         elements: [
                             {
                                 type: "rating",
-                                name: "question4",
+                                name: "beamsearch1",
                                 title: "The Beam Search View was helpful for exploring different translations.",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
@@ -60,7 +60,7 @@ export class StartExperimentComponent implements OnInit {
                             },
                             {
                                 type: "rating",
-                                name: "question6",
+                                name: "beamsearch2",
                                 title: "The Beam Search View was useful for correcting a machine-generated translation.",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
@@ -68,7 +68,7 @@ export class StartExperimentComponent implements OnInit {
                             },
                             {
                                 type: "rating",
-                                name: "question5",
+                                name: "attentionview",
                                 title: "The Attention View was helpful for analysing a translation.",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
@@ -76,7 +76,7 @@ export class StartExperimentComponent implements OnInit {
                             },
                             {
                                 type: "rating",
-                                name: "question7",
+                                name: "metricsview",
                                 title: "The Metrics View was useful for finding sentences that contain translation errors.",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
@@ -84,7 +84,7 @@ export class StartExperimentComponent implements OnInit {
                             },
                             {
                                 type: "rating",
-                                name: "question8",
+                                name: "keyphraseview",
                                 title: "The Keyphrase View was useful for finding sentences that contain translation errors.",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
@@ -100,11 +100,11 @@ export class StartExperimentComponent implements OnInit {
                 elements: [
                     {
                         type: "panel",
-                        name: "panel6",
+                        name: "visualization",
                         elements: [
                             {
                                 type: "rating",
-                                name: "question9",
+                                name: "beamsearch-vis",
                                 title: "It was difficult to understand the visual representations in the Beam Search View.",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
@@ -112,7 +112,7 @@ export class StartExperimentComponent implements OnInit {
                             },
                             {
                                 type: "rating",
-                                name: "question10",
+                                name: "attentionview-vis",
                                 title: "It was difficult to understand the visual representations in the Attention View.",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
@@ -120,7 +120,7 @@ export class StartExperimentComponent implements OnInit {
                             },
                             {
                                 type: "rating",
-                                name: "question11",
+                                name: "metricsview-vis",
                                 title: "It was easy to understand the visual representations in the Metrics View.",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
@@ -128,7 +128,7 @@ export class StartExperimentComponent implements OnInit {
                             },
                             {
                                 type: "rating",
-                                name: "question12",
+                                name: "general-vis",
                                 title: "It was difficult to interact with the visualizations.",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
@@ -144,21 +144,21 @@ export class StartExperimentComponent implements OnInit {
                 elements: [
                     {
                         type: "panel",
-                        name: "panel2",
+                        name: "opinion",
                         elements: [
                             {
                                 type: "comment",
-                                name: "question13",
+                                name: "positive-opinion",
                                 title: "What functionality or part of the system did you like and why?"
                             },
                             {
                                 type: "comment",
-                                name: "question14",
+                                name: "negative-opinion",
                                 title: "What functionality or part of the system did you dislike and why?"
                             },
                             {
                                 type: "comment",
-                                name: "question15",
+                                name: "general-opinion",
                                 title: "Do you have any other comments, feedback or ideas regarding the system?"
                             }
                         ],

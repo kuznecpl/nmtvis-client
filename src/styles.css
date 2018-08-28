@@ -15,6 +15,25 @@ body {
     stroke-width: 3px;
 }
 
+.node text {
+    font-size: 14px;
+    font-weight: normal;
+    pointer-events: none
+}
+
+
+.focus-path text {
+    font-weight: bold;
+}
+
+.focus circle {
+    stroke: rgb(255, 204, 0);
+}
+
+.focus text {
+    font-weight: bold;
+}
+
 .link {
     fill: none;
     stroke: #ccc;

@@ -234,6 +234,18 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
         d3.selectAll(".source-word-text").style("font-weight", "normal");
     }
 
+    calculateTextWidth(text) {
+        text = text.replace("@@", "")
+
+        var svg = !d3.select("#translation-vis").empty() ?
+            d3.select("#translation-vis") : d3.select("body").append("svg").attr("id", "sample");
+        var text = svg.append("text").text(text).style("font-size", "12px");
+        var width = text.node().getComputedTextLength();
+        text.remove();
+        d3.select("#sample").remove();
+        return width + 2;
+    }
+
     updateTranslation(source: string, translation: string) {
         var that = this;
         var textWidth = 70;
@@ -241,7 +253,6 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
         var maxTextLength = 10;
         var barPadding = 2;
-        var barWidthScale = d3.scaleLinear().domain([1, maxTextLength]).range([8, 70]).clamp(true);
 
         var sourceWords = source.split(" ");
         sourceWords.push("EOS")
@@ -249,24 +260,24 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
         var xTargetValues = {0: 0};
         for (var i = 1; i < targetWords.length; i++) {
-            xTargetValues[i] = xTargetValues[i - 1] + 0.5 * barWidthScale(targetWords[i].length)
-                + 0.5 * barWidthScale(targetWords[i - 1].length) + barPadding;
+            xTargetValues[i] = xTargetValues[i - 1] + 0.5 * this.calculateTextWidth(targetWords[i])
+                + 0.5 * this.calculateTextWidth(targetWords[i - 1]) + barPadding;
             if (!targetWords[i - 1].endsWith("@@")) {
-                xTargetValues[i] += 8;
+                xTargetValues[i] += 4;
             }
         }
 
         var xSourceValues = {0: 0};
         for (var i = 1; i < sourceWords.length; i++) {
-            xSourceValues[i] = xSourceValues[i - 1] + 0.5 * barWidthScale(sourceWords[i].length)
-                + 0.5 * barWidthScale(sourceWords[i - 1].length) + barPadding;
+            xSourceValues[i] = xSourceValues[i - 1] + 0.5 * this.calculateTextWidth(sourceWords[i])
+                + 0.5 * this.calculateTextWidth(sourceWords[i - 1]) + barPadding;
             if (!sourceWords[i - 1].endsWith("@@")) {
-                xSourceValues[i] += 8;
+                xSourceValues[i] += 4;
             }
         }
 
-        var w = Math.max(xSourceValues[sourceWords.length - 1] + 0.5 * barWidthScale(sourceWords.slice(-1)[0].length),
-                xTargetValues[targetWords.length - 1] + 0.5 * barWidthScale(targetWords.slice(-1)[0].length)) + leftMargin;
+        var w = Math.max(xSourceValues[sourceWords.length - 1] + 0.5 * this.calculateTextWidth(sourceWords.slice(-1)[0]),
+                xTargetValues[targetWords.length - 1] + 0.5 * this.calculateTextWidth(targetWords.slice(-1)[0])) + leftMargin;
         var margin = {top: 20, right: 20, bottom: 20, left: leftMargin},
             width = w - margin.left - margin.right,
             height = 100 - margin.top - margin.bottom;
@@ -305,13 +316,13 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
         sourceEnter.append("rect")
             .attr("x", function (d, i) {
-                return xSourceValues[i] - 0.5 * barWidthScale(d.length);
+                return xSourceValues[i] - 0.5 * that.calculateTextWidth(d);
             })
             .attr("y", function (d, i) {
                 return topY - 15;
             })
             .attr("width", function (d) {
-                return barWidthScale(d.length);
+                return that.calculateTextWidth(d);
             })
             .attr("height", 20)
             .classed("source-word-box", true)
@@ -364,13 +375,13 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
         targetEnter.append("rect")
             .attr("x", function (d, i) {
-                return xTargetValues[i] - 0.5 * barWidthScale(d.length);
+                return xTargetValues[i] - 0.5 * that.calculateTextWidth(d);
             })
             .attr("y", function (d, i) {
                 return bottomY - 15;
             })
             .attr("width", function (d) {
-                return barWidthScale(d.length);
+                return that.calculateTextWidth(d);
             })
             .attr("height", 20)
             .classed("target-word-box", true)

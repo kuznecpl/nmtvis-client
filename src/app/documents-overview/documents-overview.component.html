@@ -92,7 +92,16 @@
                          class=""
                          (mouseenter)="selectedSentence = sentence;"
                          (mouseleave)="selectedSentence = null;">
-                        <div class="sentence" style="padding-top: 5px;font-size: 13px; text-align: justify"
+
+                        <app-sentence-list-item
+                                [sentence]="sentence"
+                                [selectedDocument]="selectedDocument"
+                                [topics]="topics"
+                                [selectedSentence]="selectedSentence">
+
+                        </app-sentence-list-item>
+
+                        <!--<div class="sentence" style="padding-top: 5px;font-size: 13px; text-align: justify"
                              [ngClass]="{'active-sentence': selectedSentence == sentence}">
                             <span style="width: 45%;display:inline-block;vertical-align: top;">
                                 <a style="text-decoration: none; color: black; vertical-align: middle;"
@@ -135,7 +144,7 @@
                                 </mat-icon>
 
                             </button>
-                        </div>
+                        </div>-->
                         <mat-divider [inset]="true"></mat-divider>
                     </div>
                 </mat-card-content>

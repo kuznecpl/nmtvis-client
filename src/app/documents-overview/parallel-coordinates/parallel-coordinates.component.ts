@@ -110,17 +110,19 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
 
         var dimensions;
         var sortDirectionMap = {};
+        var metrics = ["confidence", "length", "keyphrase_score", "order_id", "coverage_penalty"];
         // Extract the list of dimensions and create a scale for each.
-        dimensions = d3.keys(sentences[0].score).filter(function (d) {
-            var extent = d3.extent(sentences, function (p) {
-                return +p.score[d];
+        dimensions = metrics // d3.keys(sentences[0].score)
+            .filter(function (d) {
+                var extent = d3.extent(sentences, function (p) {
+                    return +p.score[d];
+                });
+                y[d] = d3.scaleLinear()
+                    .domain(extent)
+                    .range([height, 0]);
+                sortDirectionMap[d] = true;
+                return true;
             });
-            y[d] = d3.scaleLinear()
-                .domain(extent)
-                .range([height, 0]);
-            sortDirectionMap[d] = true;
-            return true;
-        });
         this.y = y;
 
         x.domain(dimensions);
@@ -154,10 +156,10 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
                 that.onSentenceSelection.emit(d.id);
                 that.selectedSentenceChange.emit(d);
             });
-            /*
-            .style("stroke", function (d) {
-                return d.score["confidence"] > 0.7 ? "#42a5f5" : "#ef5350";
-            });*/
+        /*
+         .style("stroke", function (d) {
+         return d.score["confidence"] > 0.7 ? "#42a5f5" : "#ef5350";
+         });*/
         that.foreground = foreground;
         that.background = background;
         //var foregroundUpdate = foregroundEnter.merge(foreground);
