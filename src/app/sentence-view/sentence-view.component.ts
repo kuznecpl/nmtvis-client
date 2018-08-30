@@ -246,13 +246,34 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
         return width + 2;
     }
 
+
+    mouseoverTargetWord(i, attention) {
+        var svg = d3.select("#translation-vis");
+        svg.selectAll("[target-id='" + i + "']")
+            .classed("attention-selected", true);
+
+        if (!attention[i]) {
+            return;
+        }
+
+        for (var j = 0; j < attention[i].length; j++) {
+
+            svg.select("#source-word-box-" + j).style("opacity", attention[i][j]);
+
+            if (attention[i][j] > 0.3) {
+                svg.select("#source-word-text-" + j).style("font-weight", "bold");
+            }
+
+        }
+    }
+
     updateTranslation(source: string, translation: string) {
         var that = this;
         var textWidth = 70;
         var leftMargin = 120;
 
         var maxTextLength = 10;
-        var barPadding = 2;
+        var barPadding = 1;
 
         var sourceWords = source.split(" ");
         sourceWords.push("EOS")
@@ -263,7 +284,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
             xTargetValues[i] = xTargetValues[i - 1] + 0.5 * this.calculateTextWidth(targetWords[i])
                 + 0.5 * this.calculateTextWidth(targetWords[i - 1]) + barPadding;
             if (!targetWords[i - 1].endsWith("@@")) {
-                xTargetValues[i] += 4;
+                xTargetValues[i] += 3;
             }
         }
 
@@ -272,7 +293,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
             xSourceValues[i] = xSourceValues[i - 1] + 0.5 * this.calculateTextWidth(sourceWords[i])
                 + 0.5 * this.calculateTextWidth(sourceWords[i - 1]) + barPadding;
             if (!sourceWords[i - 1].endsWith("@@")) {
-                xSourceValues[i] += 4;
+                xSourceValues[i] += 3;
             }
         }
 
@@ -434,6 +455,9 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
         var tr = svg.append('g').selectAll('g').data(attention).enter().append("g");
 
         tr.each(function (d, i) {
+            if (!d) {
+                return;
+            }
             d.j = i;
         })
 

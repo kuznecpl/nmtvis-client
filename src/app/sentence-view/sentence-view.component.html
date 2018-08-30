@@ -103,8 +103,14 @@
             <div style="display:inline-block; margin: auto;" id="tree">
                 <div>
                     <form class="example-form">
-                        <span style="font-weight: bold;margin-right: 30px;">Beam Search View</span>
-                        <span style="font-weight: bold">Size</span>
+                        <span style="font-weight: bold;margin-right: 0px;">Beam Search View</span>
+                        <button style="margin-right: 20px" type="button"
+                                mat-icon-button
+                                title="Mark translation as corrected">
+                            <mat-icon (click)="showInfo()">info
+                            </mat-icon>
+                        </button>
+                        <span style="font-weight: bold">Number of translations:</span>
                         <mat-form-field style="width: 50px;height: 20px;">
                             <input matInput [(ngModel)]="beamSize" (change)="beamSizeChange()" type="number"
                                    name="beamSize"
@@ -113,8 +119,8 @@
                                    placeholder=""
                                    style="text-align:center;">
                         </mat-form-field>
-                        <span style="font-weight: bold">Length</span>
-                        <mat-form-field style="width: 50px;height: 20px;">
+                        <span *ngIf="false" style="font-weight: bold">Length</span>
+                        <mat-form-field *ngIf="false" style="width: 50px;height: 20px;">
                             <input matInput [(ngModel)]="beamLength" (change)="beamSizeChange()" type="number"
                                    name="beamLength"
                                    value="0.5" min="0"
@@ -123,8 +129,8 @@
                                    placeholder=""
                                    style="text-align:center;">
                         </mat-form-field>
-                        <span style="font-weight: bold">Coverage</span>
-                        <mat-form-field style="width: 50px;height: 20px;">
+                        <span *ngIf="false" style="font-weight: bold">Coverage</span>
+                        <mat-form-field *ngIf="false" style="width: 50px;height: 20px;">
                             <input matInput [(ngModel)]="beamCoverage" (change)="beamSizeChange()"
                                    type="number"
                                    name="beamCoverage"
@@ -134,23 +140,17 @@
                                    placeholder=""
                                    style="text-align:center;">
                         </mat-form-field>
-                        <button style="" type="button"
-                                mat-icon-button
-                                title="Mark translation as corrected">
-                            <mat-icon (click)="showInfo()">info
-                            </mat-icon>
-                        </button>
                     </form>
                 </div>
                 <div class="zoom-buttons">
-                    <button id="zoom-in" style="margin-top: 10px" type="button"
+                    <button id="zoom-in" style="margin-top: 50px" type="button"
                             mat-icon-button
                             title="Mark translation as corrected">
                         <mat-icon>zoom_in
                         </mat-icon>
 
                     </button>
-                    <button id="zoom-out" style="margin-top: 10px" type="button"
+                    <button id="zoom-out" style="margin-top: 50px" type="button"
                             mat-icon-button
                             title="Mark translation as corrected">
                         <mat-icon>zoom_out

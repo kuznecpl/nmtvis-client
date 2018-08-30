@@ -59,7 +59,7 @@ export class DocumentsOverviewComponent implements OnInit {
 
     isHighlightedTarget(sentence, word, target_index) {
         let bpe_target = sentence.translation.slice(0, -4).split(" ");
-        let source = this.textPipe.transform(sentence.source).split(" ");
+        let source = this.textPipe.transform(sentence.source, false).split(" ");
         let target = this.textPipe.transform(sentence.translation, true).split(" ");
         let bpe_source = sentence.source.split(" ");
         let attention = sentence.attention;
@@ -340,7 +340,7 @@ export class DocumentUploadDialog {
     }
 
     get uri() {
-        return this.httpUri + "?document_name=" + this.newDocumentName;
+        return this.httpUri + "?document_name=" + this.data.newDocumentName;
     }
 
     onNoClick(): void {

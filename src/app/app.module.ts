@@ -40,10 +40,12 @@ import {TextDisplayPipe} from './pipes/text-display.pipe';
 import {StartExperimentComponent} from './start-experiment/start-experiment.component';
 import {FinishComponent} from './finish/finish.component';
 import {ParallelCoordinatesComponent} from './documents-overview/parallel-coordinates/parallel-coordinates.component';
-import { SentenceListItemComponent } from './documents-overview/sentence-list-item/sentence-list-item.component';
+import {SentenceListItemComponent} from './documents-overview/sentence-list-item/sentence-list-item.component';
+import {IntroComponent} from './intro/intro.component';
 
 const appRoutes: Routes = [
     {path: 'login', component: LoginComponent, canActivate: [LoggedinRedirect]},
+    {path: 'intro', component: IntroComponent, canActivate: [EnsureAuthenticated]},
     {path: 'register', component: RegisterComponent, canActivate: [LoggedinRedirect]},
     {path: 'documents', component: DocumentsOverviewComponent, canActivate: [EnsureAuthenticated]},
     {path: 'start', component: StartExperimentComponent, canActivate: [EnsureAuthenticated]},
@@ -76,7 +78,8 @@ const appRoutes: Routes = [
         DocumentsOverviewComponent, LoginComponent, InfoDialog,
         SentenceViewComponent, BeamNodeDialog, SentencesVisComponent,
         DocumentUploadDialog, RegisterComponent, PlainSentenceViewComponent,
-        TextDisplayPipe, StartExperimentComponent, FinishComponent, ParallelCoordinatesComponent, SentenceListItemComponent
+        TextDisplayPipe, StartExperimentComponent, FinishComponent,
+        ParallelCoordinatesComponent, SentenceListItemComponent, IntroComponent
     ],
     imports: [
         BrowserModule, HttpClientModule, FormsModule, BrowserAnimationsModule, MatSnackBarModule,

@@ -13,15 +13,18 @@ export class BeamTree {
     hoveredNode;
     focusNode;
     currentInput = "";
+    currentFocusChildIndex = 0;
+    height;
 
     constructor(private treeData: any, private that: any) {
 
     }
 
     build() {
-        var margin = {top: 70, right: 30, bottom: 30, left: 50},
+        var margin = {top:50, right: 30, bottom: 50, left: 50},
             width = 1350 - margin.left - margin.right,
             height = 390 - margin.top - margin.bottom;
+        this.height = height;
 
         // append the svg object to the body of the page
         // appends a 'group' element to 'svg'
@@ -59,6 +62,12 @@ export class BeamTree {
 
         d3.select('body').on("keydown", function () {
             tree.keydown(tree);
+        });
+        d3.select('input').on("keydown", function () {
+            d3.event.stopPropagation();
+        });
+        d3.select('textarea').on("keydown", function () {
+            d3.event.stopPropagation();
         });
 
         var i = 0,
@@ -102,7 +111,7 @@ export class BeamTree {
         this.root = d3.hierarchy(this.treeData, function (d) {
             return d.children;
         });
-        this.root.x0 = height / 2;
+        this.root.x0 = this.height / 2;
         this.root.y0 = 0;
 
         //this.svg.attr("transform", "translate(" + 50 + "," + 20 + ")");
@@ -230,6 +239,9 @@ export class BeamTree {
                 //return d.children ? "end" : "start";
                 return "middle";
             })
+            .attr("text-decoration", function (d) {
+                return d.data.isEdit ? "underline" : "none";
+            })
             .text(function (d) {
                 var logprob = d.data.logprob ? d.data.logprob.toString() : "";
 
@@ -333,7 +345,13 @@ export class BeamTree {
                 if (d.parent.data.name.endsWith("@@")) {
                     classes.push("bpe-link");
                 }
+                if (beamTree.isParentInFocus(d)) {
+                    classes.push("focus-link");
+                }
                 return classes.join(" ");
+            })
+            .attr("link-path", function (d) {
+                return beamTree.getNodeId(d);
             })
             .attr('d', function (d) {
                 var o = {x: source.x0, y: source.y0};
@@ -368,6 +386,9 @@ export class BeamTree {
                 if (d.parent.data.name.endsWith("@@")) {
                     classes.push("bpe-link");
                 }
+                if (beamTree.isParentInFocus(d)) {
+                    classes.push("focus-link");
+                }
                 return classes.join(" ");
             })
             .attr('d', function (d) {
@@ -395,6 +416,11 @@ export class BeamTree {
 
     }
 
+    isParentInFocus(d) {
+        return d.parent && d.parent.children[this.currentFocusChildIndex] === d
+            && this.getNodeId(this.focusNode) === this.getNodeId(d.parent);
+    }
+
     addToDocumentUnkMap(d, word) {
         var that = this.that;
         var maxWordIndex = this.getMaxAttnSourceWordIndex(d);
@@ -411,11 +437,35 @@ export class BeamTree {
         }
     }
 
+    visitAncestors(d, fn) {
+        if (!d) {
+            return;
+        }
+        console.log(fn);
+        fn(d);
+        this.visitAncestors(d.parent, fn);
+    }
+
     // Toggle children on click.
     click(d, el) {
+        var tree = this;
         this.that.addEvent("node-click", this.getPath(d) + " " + d.data.name);
 
         if (d.data.name === "EOS" && !d.data.isCandidate) {
+            this.center(d);
+
+            let eos = this.getNodeSelection(d);
+            eos.select("circle")
+                .transition().duration(300)
+                .attr("r", 10)
+                .transition().duration(400)
+                .attr("r", 8);
+
+            d3.selectAll('.focus-path').classed("focus-path", false);
+            this.visitAncestors(d, node => {
+                tree.getNodeSelection(node).classed("focus-path", true);
+            });
+
             this.resetGoldenHypothesisBeam(this.that.beam);
             this.setGoldenHypothesis(d);
             this.setGoldenHypothesisBeam(this.that.beam, this.getPathList(d));
@@ -510,12 +560,13 @@ export class BeamTree {
     }
 
     addToCorrectionMap(correction, partial) {
-        var words = correction.split(" ");
+        /*var words = correction.split(" ");
 
-        for (var i = 0; i < correction.length; i++) {
-            var currPartial = partial.split(" ").concat(words.slice(0, i)).join(" ");
-            this.that.correctionMap[currPartial] = words[i];
-        }
+         for (var i = 0; i < correction.length; i++) {
+         var currPartial = partial.split(" ").concat(words.slice(0, i)).join(" ");
+         this.that.correctionMap[currPartial] = words[i];
+         }*/
+        this.that.correctionMap[partial] = this.that.encodeText(correction);
     }
 
     getBeamNode(node, path) {
@@ -535,8 +586,11 @@ export class BeamTree {
     }
 
     hasEditChild(d) {
+        if (!d.children) {
+            return false;
+        }
         for (let child of d.children) {
-            if (child.isEdit) {
+            if (child.data.isEdit) {
                 return true;
             }
         }
@@ -545,7 +599,7 @@ export class BeamTree {
 
     getEditChild(d) {
         for (let child of d.children) {
-            if (child.isEdit) {
+            if (child.data.isEdit) {
                 return child;
             }
         }
@@ -556,12 +610,14 @@ export class BeamTree {
         if (!d) {
             return;
         }
+        console.log("removing " + d)
         var index = -1;
         for (var i = 0; i < d.children.length; i++) {
             if (d.children[i].isEdit) {
                 index = i;
             }
         }
+        console.log(index);
         if (index > -1) {
             d.children.splice(index, 1);
         }
@@ -622,7 +678,7 @@ export class BeamTree {
                 }
             }
         }
-        candidates.push("EDIT");
+        //candidates.push("EDIT");
 
         var beamNode = this.getBeamNode(this.treeData, this.getPathList(d).slice(1));
         for (var i = 0; i < candidates.length; i++) {
@@ -659,7 +715,7 @@ export class BeamTree {
                 }
             }
         }
-        candidates.push("EDIT");
+        //candidates.push("EDIT");
 
         var that = this.that;
 
@@ -706,39 +762,39 @@ export class BeamTree {
 
 
     center(d, dir) {
-        if (true) {
-            this.getNodeSelection(this.focusNode).classed("focus", false);
-        }
+        // Unfocus old node
+        this.getNodeSelection(this.focusNode).classed("focus", false);
+        d3.select(".focus-link").classed("focus-link", false);
+        // Unfocus path if not moving forwards
         if (dir === "left" || dir === "up" || dir === "down") {
             this.getNodeSelection(this.focusNode).classed("focus-path", false);
         }
-        console.log("center " + d.data.name);
 
+        // Focus current node
         this.focusNode = d;
-        var node = d3.select('[node-path="' + this.getNodeId(d) + '"]');
+        var node = this.getNodeSelection(d);
         node.classed("focus", true);
         node.classed("focus-path", true);
 
-        if (this.focusNode) {
+
+        // Update attention view
+        if (!this.focusNode.data.isCandidate && !this.focusNode.data.isEdit) {
             this.that.attention = this.getBeamAttention(this.focusNode);
             this.that.translation = this.getRawTranslation(this.focusNode);
             this.that.updateTranslation(this.that.sentence.join(" "), this.that.translation.join(" "));
 
             this.mouseover(this.focusNode, this.getNodeSelection(this.focusNode))
+            this.that.mouseoverTargetWord(this.that.translation.length - 1, this.that.attention);
         }
 
+        // Center view on focus node
         var transform = this.getTransformation(this.svg.attr("transform"));
         var xTranslate = 650 - (transform.translateX + d.y);
         var yTranslate = 195 - (transform.translateY + d.x);
-
-
         if (transform.translateX + d.y > 1200 || transform.translateX + d.y < 50) {
             this.svg.transition().duration(1000)
                 .attr("transform", "translate(" + (transform.translateX + xTranslate) + "," + transform.translateY + ")");
 
-        }
-        if (transform.translateY + d.x < 30 || transform.translateY + d.x > 350) {
-            //this.svg.transition().duration(500).call(this.zoom.translateBy, 0, yTranslate);
         }
     }
 
@@ -746,56 +802,71 @@ export class BeamTree {
         return d3.select('[node-path="' + this.getNodeId(d) + '"]');
     }
 
+    getLinkSelection(d) {
+        return d3.select('[link-path="' + this.getNodeId(d) + '"]');
+    }
+
     keydown(tree) {
         switch (d3.event.keyCode) {
-            case 13: // Space
+            case 13: // Enter
                 this.currentInput = "";
                 this.click(this.focusNode, this.getNodeSelection(this.focusNode))
                 break;
             case 37: { // Left Arrow
                 this.currentInput = "";
+                this.currentFocusChildIndex = 0;
                 tree.focusNode.parent ? this.center(tree.focusNode.parent, "left") : 0;
                 break;
             }
             case 8: { // Backspace
-                if (this.currentInput.length > 0) {
+                if (this.currentInput.length > 1) {
                     this.currentInput = this.currentInput.slice(0, -1);
                 } else {
+                    this.currentInput = this.currentInput.slice(0, -1);
                     tree.focusNode.parent ? this.center(tree.focusNode.parent, "left") : 0;
                 }
-
+                d3.event.preventDefault();
                 break;
             }
-            case 9:
+            case 9: // TAB
             case 39: { // Right Arrow
                 this.currentInput = "";
-                this.center(tree.focusNode.children[0], "right");
+                if (tree.focusNode.children) {
+                    this.center(tree.focusNode.children[this.currentFocusChildIndex], "right");
+                }
+                d3.event.preventDefault();
+                this.currentFocusChildIndex = 0;
                 break;
             }
             case 38: { // Up Arrow
-                this.currentInput = "";
-                if (tree.focusNode.parent && tree.focusNode.parent.children.length > 1) {
-                    // Get child index
-                    let i = tree.focusNode.parent.children.indexOf(tree.focusNode);
-                    i = i === 0 ? tree.focusNode.parent.children.length - 1 : i - 1;
-                    this.center(tree.focusNode.parent.children[i], "up");
+                if (this.focusNode.children) {
+                    this.currentFocusChildIndex = (this.currentFocusChildIndex - 1) % this.focusNode.children.length;
+                    if (this.currentFocusChildIndex < 0) {
+                        this.currentFocusChildIndex = this.focusNode.children.length - 1;
+                    }
                 }
+                /*
+                 if (tree.focusNode.parent && tree.focusNode.parent.children.length > 1) {
+                 // Get child index
+                 let i = tree.focusNode.parent.children.indexOf(tree.focusNode);
+                 i = i === 0 ? tree.focusNode.parent.children.length - 1 : i - 1;
+                 this.center(tree.focusNode.parent.children[i], "up");
+                 }*/
                 break;
             }
             case 40: { // Down Arrow
-                this.currentInput = "";
-                if (tree.focusNode.parent && tree.focusNode.parent.children.length > 1) {
-                    // Get child index
-                    let i = tree.focusNode.parent.children.indexOf(tree.focusNode);
-                    i = i === tree.focusNode.parent.children.length - 1 ? 0 : i + 1;
-                    this.center(tree.focusNode.parent.children[i], "down");
+                if (this.focusNode.children) {
+                    this.currentFocusChildIndex = (this.currentFocusChildIndex + 1) % this.focusNode.children.length;
                 }
+                /* Move to sibling
+                 if (tree.focusNode.parent && tree.focusNode.parent.children.length > 1) {
+                 // Get child index
+                 let i = tree.focusNode.parent.children.indexOf(tree.focusNode);
+                 i = i === tree.focusNode.parent.children.length - 1 ? 0 : i + 1;
+                 this.center(tree.focusNode.parent.children[i], "down");
+                 }*/
                 break;
             }
-        }
-
-        if (this.focusNode.isEdit) {
-            return;
         }
 
         var key = d3.event.key;
@@ -803,7 +874,7 @@ export class BeamTree {
             this.currentInput += key;
 
             var node = this.getBeamNode(this.treeData, this.getPathList(this.focusNode).slice(1));
-            if (!this.hasEditChild(node)) {
+            if (!this.focusNode.data.isEdit && !this.hasEditChild(this.focusNode)) {
                 node.children.push({
                     attn: [],
                     name: this.currentInput,
@@ -814,20 +885,26 @@ export class BeamTree {
                     isEdit: true,
                 });
             } else {
-                this.getEditChild(node).name = this.currentInput;
+                node.name = this.currentInput;
             }
             this.updateData(this.treeData);
+            if (!this.focusNode.data.isEdit) {
+                this.center(this.getEditChild(this.focusNode), "right");
+            }
         } else if (this.currentInput.length > 0) {
             var node = this.getBeamNode(this.treeData, this.getPathList(this.focusNode).slice(1));
-            this.getEditChild(node).name = this.currentInput;
+            node.name = this.currentInput;
             this.updateData(this.treeData);
-        } else {
+        } else if (this.hasEditChild(this.focusNode)) {
             var node = this.getBeamNode(this.treeData, this.getPathList(this.focusNode).slice(1));
+            console.log(node)
             this.removeEditChild(node);
             this.updateData(this.treeData);
+            this.center(this.focusNode)
         }
+        this.updateData(this.treeData);
 
-        d3.select('#currentBeamInput').text("Type in Correction: " + this.currentInput);
+        d3.select('#currentBeamInput').text("Simply type for correction " + this.currentInput);
     }
 
     // Creates a curved (diagonal) path from parent to the child node
@@ -849,7 +926,7 @@ export class BeamTree {
             if (d.data.isEdit) {
                 path.push("<EDIT>")
             } else {
-                path.push(d.data.name);
+                path.push(d.data.name.replace(/"/g, "&quot;").replace(/'/g, "&apos;"));
             }
             d = d.parent;
         }
@@ -1023,24 +1100,27 @@ export class BeamTree {
             .style("font-size", "12px");
 
         rect
-            .append("text")
+            .append("foreignObject")
             .attr("x", 0)
-            .attr("y", 320)
-            .text("Type in Correction: ")
-            .attr("id", "currentBeamInput")
+            .attr("y", 300)
+            .attr("width", "300px")
+            .html("<span>Type any <kbd>key</kbd> for custom correction</span>")
             .style("font-size", "12px");
 
         rect
-            .append("text")
+            .append("foreignObject")
             .attr("x", 0)
-            .attr("y", 340)
-            .text("Select/Edit with ENTER")
+            .attr("y", 325)
+            .attr("width", "300px")
+            .html("<span>Select/Edit with <kbd>ENTER</kbd>, Delete with <kbd>BACKSPACE</kbd></span>")
             .style("font-size", "12px");
+
         rect
-            .append("text")
+            .append("foreignObject")
             .attr("x", 0)
-            .attr("y", 360)
-            .text("Navigate with TAB and ← → ↑ ↓")
+            .attr("y", 350)
+            .attr("width", "300px")
+            .html("<span>Navigate with <kbd>TAB</kbd> and <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></span>")
             .style("font-size", "12px");
 
 

@@ -85,7 +85,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
 
         var margin = {top: 30, right: 10, bottom: 20, left: -70},
             width = 1000 - margin.left - margin.right,
-            height = 170 - margin.top - margin.bottom;
+            height = 220 - margin.top - margin.bottom;
 
         d3.selectAll('#parallel-coordinates-box svg').remove();
         var svg = d3.select("#parallel-coordinates-box").append("svg")
@@ -226,7 +226,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
 
         var sortGroup = axisGroup
             .append("g")
-            .attr("transform", "translate(-7, 125)");
+            .attr("transform", "translate(-7, 175)");
         var sortIcon = this.createSortIcon(sortGroup, true);
         sortIcon.on("click", function (d) {
             if (d3.select(this).classed("active-sort-icon")) {

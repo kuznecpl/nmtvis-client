@@ -22,12 +22,36 @@ export class StartExperimentComponent implements OnInit {
                     },
                     {
                         type: "panel",
+                        name: "other_skills",
+                        elements: [
+                            {
+                                type: "rating",
+                                name: "mat_knowledge",
+                                title: "How much knowledge do you have about Machine Translation?",
+                                rateMax: 7,
+                                minRateDescription: "None",
+                                maxRateDescription: "Expert Knowledge"
+                            },
+                            {
+                                type: "rating",
+                                name: "vis_knowledge",
+                                title: "How much knowledge do you have about Visualizations?",
+                                rateMax: 7,
+                                minRateDescription: "None",
+                                maxRateDescription: "Expert Knowledge"
+                            }
+                        ],
+                        title: "Background"
+                    },
+                    {
+                        type: "panel",
                         name: "language-panel",
                         elements: [
                             {
                                 type: "rating",
                                 name: "german",
                                 title: "How do you rate your German language proficiency?",
+                                rateMax: 7,
                                 minRateDescription: "Poor",
                                 maxRateDescription: "Native Speaker"
                             },
@@ -35,6 +59,7 @@ export class StartExperimentComponent implements OnInit {
                                 type: "rating",
                                 name: "english",
                                 title: "How do you rate your English language proficiency?",
+                                rateMax: 7,
                                 minRateDescription: "Poor",
                                 maxRateDescription: "Native Speaker"
                             }
@@ -52,24 +77,24 @@ export class StartExperimentComponent implements OnInit {
                         elements: [
                             {
                                 type: "rating",
-                                name: "beamsearch1",
-                                title: "The Beam Search View was helpful for exploring different translations.",
+                                name: "overall",
+                                title: "Overall, I am satisfied with the ease of completing the tasks in this scenario.",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
                                 maxRateDescription: "strongly agree"
                             },
                             {
                                 type: "rating",
-                                name: "beamsearch2",
-                                title: "The Beam Search View was useful for correcting a machine-generated translation.",
+                                name: "prefer_large",
+                                title: "I would prefer the system over a simple text field for translating a large document ( >100 sentences).",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
                                 maxRateDescription: "strongly agree"
                             },
                             {
                                 type: "rating",
-                                name: "attentionview",
-                                title: "The Attention View was helpful for analysing a translation.",
+                                name: "prefer_small",
+                                title: "I would prefer the system over a simple text field for translating a small document ( <20 sentences).",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
                                 maxRateDescription: "strongly agree"
@@ -89,6 +114,30 @@ export class StartExperimentComponent implements OnInit {
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
                                 maxRateDescription: "strongly agree"
+                            },
+                            {
+                                type: "rating",
+                                name: "beamsearchview1",
+                                title: "The Beam Search View was helpful for exploring different translations.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            },
+                            {
+                                type: "rating",
+                                name: "beamsearchview2",
+                                title: "The Beam Search View was useful for correcting a machine-generated translation.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            },
+                            {
+                                type: "rating",
+                                name: "attentionview",
+                                title: "The Attention View was helpful for analysing a translation.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
                             }
                         ],
                         title: "Functionality"
@@ -105,6 +154,22 @@ export class StartExperimentComponent implements OnInit {
                             {
                                 type: "rating",
                                 name: "beamsearch-vis",
+                                title: "It was difficult to understand the visual representations in the Keyphrase View.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            },
+                            {
+                                type: "rating",
+                                name: "metricsview-vis",
+                                title: "It was difficult to understand the visual representations in the Metrics View.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            },
+                            {
+                                type: "rating",
+                                name: "beamsearchview-vis",
                                 title: "It was difficult to understand the visual representations in the Beam Search View.",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
@@ -120,22 +185,38 @@ export class StartExperimentComponent implements OnInit {
                             },
                             {
                                 type: "rating",
-                                name: "metricsview-vis",
-                                title: "It was easy to understand the visual representations in the Metrics View.",
+                                name: "metricsview-interaction",
+                                title: "It was easy to interact with the Metrics View.",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
                                 maxRateDescription: "strongly agree"
                             },
                             {
                                 type: "rating",
-                                name: "general-vis",
-                                title: "It was difficult to interact with the visualizations.",
+                                name: "keyphraseview-interaction",
+                                title: "It was easy to interact with the Keyphrase View.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            },
+                            {
+                                type: "rating",
+                                name: "beamsearchview-interaction",
+                                title: "It was easy to interact with the Beam Search View.",
+                                rateMax: 7,
+                                minRateDescription: "strongly disagree ",
+                                maxRateDescription: "strongly agree"
+                            },
+                            {
+                                type: "rating",
+                                name: "attentionview-interaction",
+                                title: "It was easy to interact with the Attention View.",
                                 rateMax: 7,
                                 minRateDescription: "strongly disagree ",
                                 maxRateDescription: "strongly agree"
                             }
                         ],
-                        title: "Visualization"
+                        title: "Visualization & Interaction"
                     }
                 ]
             },

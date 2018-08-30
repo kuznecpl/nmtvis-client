@@ -33,12 +33,13 @@
         </mat-icon>
 
     </button>
-    <button style="" type="button"
+    <a style="" type="button"
+            [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]"
             (click)="onSentenceClick(sentence)"
             mat-icon-button
             title="Edit translation">
         <mat-icon style="color: lightgray">edit
         </mat-icon>
 
-    </button>
+    </a>
 </div>

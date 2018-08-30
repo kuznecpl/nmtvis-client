@@ -32,13 +32,13 @@
 
                     </app-sentences-vis>
                 </div>
-                <div id="keyphrase-view" style="height:160px">
+                <div id="keyphrase-view" style="height:200px">
                     <div style="float:left;display: inline-block;vertical-align: top;width: 19%; height: 100%">
                         <mat-card class="example-card" style="padding: 10px;height: 100%;">
                             <mat-card-header>
-                                Keyphrases
+                                Keyphrase View
                             </mat-card-header>
-                            <mat-card-content style="height: 70%;">
+                            <mat-card-content style="height: 80%;">
                                 <div style="overflow-y: scroll;text-align: start;height: 90%;">
                                     <div *ngFor="let topic of topics">
                                         <div class="topic" style="padding:2px;" (mouseenter)="hoverTopic=topic"
@@ -74,11 +74,13 @@
                     </div>
                 </div>
 
-                <h3 style="width:45%; display: inline-block;margin-left: 5px;margin-bottom: 0px;">Source</h3>
-                <h3 style="width:45%; display: inline-block;margin-bottom: 0px;">Translation</h3>
-
+                <div>
+                    <h3 style="margin-top:35px;width:45%; display: inline-block;margin-left: 5px;margin-bottom: 0px">
+                        Source</h3>
+                    <h3 style="margin-top:35px;width:45%; display: inline-block;margin-bottom: 0px;">Translation</h3>
+                </div>
                 <mat-card-content id="document-scroll"
-                                  style="text-align: left;overflow-y: scroll; height: 450px;">
+                                  style="text-align: left;overflow-y: scroll; height: 400px;">
 
                     <mat-progress-spinner *ngIf="loading" style="margin:auto;width:10px;height:10px;"
                                           class="example-margin"
@@ -86,6 +88,11 @@
                                           [diameter]="40"
                                           mode="indeterminate">
                     </mat-progress-spinner>
+
+                    <div style="text-align: center;margin-top: 50px;color: gray;"
+                         *ngIf="!loading && selectedDocument.sentences.length === 0">
+                        No sentences found for current filters
+                    </div>
 
                     <div *ngFor="let sentence of selectedDocument.sentences; let i = index;"
                          style=""
@@ -149,7 +156,7 @@
                     </div>
                 </mat-card-content>
 
-                <div>
+                <div style="">
                     <span>Corrected {{ correctedSentences }}</span>
 
                     <form class="example-form" style="display: inline;margin-left: 20px;">
