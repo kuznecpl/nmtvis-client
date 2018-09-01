@@ -29,13 +29,18 @@ export class DocumentsOverviewComponent implements OnInit {
     ];
     sentenceId;
     documentId;
-    loading = true;
+    loading = false;
     topics = [{name: 'diagramm', active: false, occurrences: 0},
         {name: 'element', active: false, occurrences: 0},
         {name: 'computer', active: false, occurrences: 0}
     ];
     newKeyphrase;
     hoverTopic;
+    defaultSortMetric = "order_id";
+    defaultSortAscending = true;
+    currentSortMetric = this.defaultSortMetric;
+    currentSortAscending = true;
+    defaultBrush = {};
 
     constructor(readonly documentService: DocumentService, public dialog: MatDialog, private route: ActivatedRoute,
                 private textPipe: TextDisplayPipe) {
@@ -43,7 +48,9 @@ export class DocumentsOverviewComponent implements OnInit {
             .subscribe(documents => {
                 this.documents = documents;
                 if (this.documents.length > 0) {
+                    this.loadSortSettings();
                     this.onClick(this.documents[0]);
+                    this.loadTopics();
                 }
             });
     }
@@ -125,40 +132,54 @@ export class DocumentsOverviewComponent implements OnInit {
         this.newKeyphrase = "";
     }
 
-    onActiveTopicChange() {
-        var currentSentences = this.allSentences;
-        var filteredSentences = [];
-        var words = d3.selectAll('.source-word');
-        var that = this;
-
-        for (let sentence of currentSentences) {
-            var hasAllTopics = true;
-            for (var topic of that.topics) {
-                if (topic.active && !this.isTopicMatch(sentence.source.replace(/@@ /g, ""), topic)) {
-                    hasAllTopics = false;
-                    break;
-                }
-            }
-            if (hasAllTopics) {
-                filteredSentences.push(sentence);
+    hasActiveTopic(sentence) {
+        for (var topic of this.topics) {
+            if (topic.active && !this.isTopicMatch(sentence.source.replace(/@@ /g, ""), topic)) {
+                return false;
             }
         }
-        this.selectedDocument.sentences = filteredSentences;
+        return true;
+    }
 
-        words.each(function () {
-            var el = d3.select(this);
-            var highlight = false;
+    onActiveTopicChange() {
+        /*
+         var currentSentences = this.allSentences;
+         var filteredSentences = [];
+         var words = d3.selectAll('.source-word');
+         var that = this;
 
-            for (var topic of that.topics) {
-                if (topic.active && el.text().trim().toLowerCase().indexOf(topic.name.toLowerCase()) >= 0) {
-                    highlight = true;
-                }
-            }
-        });
+         for (let sentence of currentSentences) {
+         var hasAllTopics = true;
+         for (var topic of that.topics) {
+         if (topic.active && !this.isTopicMatch(sentence.source.replace(/@@ /g, ""), topic)) {
+         hasAllTopics = false;
+         break;
+         }
+         }
+         if (hasAllTopics) {
+         filteredSentences.push(sentence);
+         }
+         }
+         this.selectedDocument.sentences = filteredSentences;
+
+         words.each(function () {
+         var el = d3.select(this);
+         var highlight = false;
+
+         for (var topic of that.topics) {
+         if (topic.active && el.text().trim().toLowerCase().indexOf(topic.name.toLowerCase()) >= 0) {
+         highlight = true;
+         }
+         }
+         });*/
         this.topics = this.topics.slice();
+        this.cacheTopics();
     }
 
     sortSentences(metric: string, sortAscending: boolean) {
+        console.log("sortSentences(" + metric + "," + sortAscending + ")");
+        this.currentSortMetric = metric;
+        this.currentSortAscending = sortAscending;
         this.selectedDocument.sentences = this.selectedDocument.sentences.sort((a, b) => {
             if (sortAscending) {
                 return a["score"][metric] - b["score"][metric];
@@ -166,6 +187,51 @@ export class DocumentsOverviewComponent implements OnInit {
                 return b["score"][metric] - a["score"][metric];
             }
         }).slice();
+    }
+
+    sortGivenSentences(sentences, metric: string, sortAscending: boolean) {
+        return sentences.sort((a, b) => {
+            if (sortAscending) {
+                return a["score"][metric] - b["score"][metric];
+            } else {
+                return b["score"][metric] - a["score"][metric];
+            }
+        }).slice();
+    }
+
+    loadSortSettings() {
+        if (localStorage.getItem("sortMetric") !== null) {
+            this.defaultSortMetric = localStorage.getItem("sortMetric");
+        }
+        if (localStorage.getItem("sortAscending") !== null) {
+            this.defaultSortAscending = localStorage.getItem("sortAscending") === 'true' ? true : false;
+        }
+    }
+
+    loadTopics() {
+        if (this.selectedDocument && localStorage.getItem(this.selectedDocument.id + "-topics") !== null) {
+            this.topics = JSON.parse(localStorage.getItem(this.selectedDocument.id + "-topics"));
+        }
+    }
+
+    cacheBrush(brushMap) {
+        localStorage.setItem(this.selectedDocument.id + "-brush", JSON.stringify(brushMap));
+    }
+
+    loadDefaultBrush() {
+        this.defaultBrush = JSON.parse(localStorage.getItem(this.selectedDocument.id + "-brush"));
+    }
+
+    cacheTopics() {
+        if (this.selectedDocument) {
+            localStorage.setItem(this.selectedDocument.id + "-topics", JSON.stringify(this.topics));
+        }
+    }
+
+    ngOnDestroy() {
+        localStorage.setItem("sortMetric", this.currentSortMetric);
+        localStorage.setItem("sortAscending", "" + this.currentSortAscending);
+        this.cacheTopics();
     }
 
 
@@ -177,6 +243,8 @@ export class DocumentsOverviewComponent implements OnInit {
             if (!this.documentId || !this.sentenceId) {
                 return;
             }
+
+            this.loadSortSettings();
 
             this.documentService.getDocuments()
                 .subscribe(documents => {
@@ -204,8 +272,13 @@ export class DocumentsOverviewComponent implements OnInit {
         });
     }
 
+    onBrushExtentChange(brushMap) {
+        this.cacheBrush(brushMap);
+        console.log("cached " + brushMap)
+    }
+
     onBrushSelectionChange(sentences) {
-        this.selectedDocument.sentences = sentences;
+        this.selectedDocument.sentences = this.sortGivenSentences(sentences, this.currentSortMetric, this.currentSortAscending);
     }
 
     scrollToSentence(sentenceId) {
@@ -261,18 +334,39 @@ export class DocumentsOverviewComponent implements OnInit {
             });
     }
 
+    cacheSentences() {
+        localStorage.setItem(this.selectedDocument.id + "-sentences", JSON.stringify(this.selectedDocument.sentences));
+    }
+
+    loadCachedSentences() {
+        if (localStorage.getItem(this.selectedDocument.id + "-sentences") !== null) {
+            //this.selectedDocument.sentences = JSON.parse(localStorage.getItem(this.selectedDocument.id + "-sentences"));
+            //this.allSentences = JSON.parse(localStorage.getItem(this.selectedDocument.id + "-sentences"));
+            //return true;
+        }
+        return false;
+    }
+
     onClick(document, callback = () => {
     }) {
         this.selectedDocument = document;
+
         this.topics = document.keyphrases;
-        this.loading = true;
+        this.loadTopics();
+        this.loadDefaultBrush();
+        let result = this.loadCachedSentences();
+        this.loading = !result;
 
         this.documentService.getSentences(document.id)
             .subscribe(sentences => {
                 this.selectedDocument.sentences = sentences;
                 this.allSentences = sentences;
-                this.sortSentences("length", false);
-                this.onShowCorrected();
+                console.log(sentences.slice(0, 10));
+                this.cacheSentences();
+                //this.allSentences = sentences;
+                //this.onActiveTopicChange();
+                //this.sortSentences(this.defaultSortMetric, this.defaultSortAscending);
+                //this.onShowCorrected();
                 callback();
                 this.loading = false;
             });
@@ -308,20 +402,6 @@ export class DocumentsOverviewComponent implements OnInit {
     }
 
     onShowCorrected() {
-        if (this.showCorrected) {
-            this.selectedDocument.sentences = this.allSentences;
-            return;
-        }
-
-        //this.allSentences = this.selectedDocument.sentences;
-        var sentences = [];
-
-        for (var i = 0; i < this.selectedDocument.sentences.length; i++) {
-            if (!this.selectedDocument.sentences[i].corrected) {
-                sentences.push(this.selectedDocument.sentences[i]);
-            }
-        }
-        this.selectedDocument.sentences = sentences;
     }
 
 

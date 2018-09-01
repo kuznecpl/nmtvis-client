@@ -1,6 +1,7 @@
 import {Component, OnInit, AfterViewInit, Input, Output, OnChanges, EventEmitter} from '@angular/core'
 import {TextDisplayPipe} from '../../pipes/text-display.pipe';
 import {DocumentService} from '../../services/document.service';
+import {Router}                 from '@angular/router';
 
 @Component({
     selector: 'app-sentence-list-item',
@@ -21,7 +22,7 @@ export class SentenceListItemComponent implements OnInit, OnChanges {
     targetToBpe;
     bpeToSource;
 
-    constructor(readonly documentService: DocumentService, private textPipe: TextDisplayPipe) {
+    constructor(readonly router: Router, readonly documentService: DocumentService, private textPipe: TextDisplayPipe) {
     }
 
     ngOnInit() {
@@ -29,8 +30,11 @@ export class SentenceListItemComponent implements OnInit, OnChanges {
     }
 
     ngOnChanges(changes: SimpleChanges) {
-        if (changes.topics && changes.topics.newValue) {
+        if (changes.topics && changes.topics.currentValue) {
             this.buildMappings();
+        }
+        if (changes.sentence && changes.sentence.currentValue) {
+            this.sentence = changes.sentence.currentValue;
         }
     }
 
@@ -67,6 +71,10 @@ export class SentenceListItemComponent implements OnInit, OnChanges {
         this.bpeToSource = bpeToSource;
     }
 
+    openSentenceView(sentence) {
+        this.router.navigate(['/document', this.selectedDocument.id, 'sentence', sentence.id]);
+    }
+
     isHighlighted(word) {
         for (var topic of this.topics) {
             if (topic.active && word.trim().toLowerCase().indexOf(topic.name.toLowerCase()) >= 0) {
@@ -76,7 +84,8 @@ export class SentenceListItemComponent implements OnInit, OnChanges {
         return false;
     }
 
-    onSentenceClick(sentence) {
+    onSentenceClick(sentence, event) {
+        event.stopPropagation();
         sentence.corrected = !sentence.corrected;
 
         this.documentService.setCorrected(this.selectedDocument.id, sentence.id, sentence.corrected)

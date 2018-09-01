@@ -1,18 +1,23 @@
-<div class="sentence" style="padding-top: 5px;font-size: 13px; text-align: justify"
-     [ngClass]="{'active-sentence': selectedSentence == sentence}">
-                            <span style="width: 45%;display:inline-block;vertical-align: top;">
-                                <a style="text-decoration: none; color: black; vertical-align: middle;"
-                                   [id]="'sentence-' + sentence.id"
-                                   [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]">
-                                    <span *ngFor="let word of textPipe.transform(sentence.source).split(' ')"
-                                          class="source-word"
-                                          [style.background-color]="isHighlighted(word) ? '#ffa50091' : none">
-                                        {{word}}
-                                    </span>
+<div class="sentence" style="padding-top: 5px;font-size: 13px; text-align: justify; cursor: pointer;display: flex;"
+     (click)="openSentenceView(sentence)"
+     [ngClass]="{'active-sentence': selectedSentence !== null && selectedSentence !== undefined && selectedSentence.id == sentence.id}">
 
-                                </a>
-                            </span>
-    <span style="width: 45%;display: inline-block; vertical-align: top;padding-left: 10px;">
+    <span style="width: 35px; padding-right: 5px;vertical-align: top; color: gray">
+        #{{ sentence.score["order_id"] }}
+    </span>
+    <span style="width: 50%;display:inline-block;vertical-align: top;">
+        <a style="text-decoration: none; color: black; vertical-align: middle;"
+           [id]="'sentence-' + sentence.id"
+           [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]">
+            <span *ngFor="let word of textPipe.transform(sentence.source).split(' ')"
+                  class="source-word"
+                  [style.background-color]="isHighlighted(word) ? '#ffa50091' : none">
+                {{word}}
+            </span>
+
+        </a>
+    </span>
+    <span style="width: 50%;display: inline-block; vertical-align: top;padding-left: 10px;">
         <a style="text-decoration: none; color: black; vertical-align: middle;"
            [id]="'translation-sentence-' + sentence.id"
            [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]">
@@ -26,7 +31,7 @@
         </a>
     </span>
     <button style="" type="button"
-            (click)="onSentenceClick(sentence)"
+            (click)="onSentenceClick(sentence, $event)"
             mat-icon-button
             title="Mark translation as corrected">
         <mat-icon [ngStyle]="{'color': sentence.corrected ? 'green' : 'lightgray'}">check_circle
@@ -34,12 +39,12 @@
 
     </button>
     <a style="" type="button"
-            [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]"
-            (click)="onSentenceClick(sentence)"
-            mat-icon-button
-            title="Edit translation">
+       [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]"
+       mat-icon-button
+       title="Edit translation">
         <mat-icon style="color: lightgray">edit
         </mat-icon>
 
     </a>
 </div>
+<mat-divider [inset]="true"></mat-divider>

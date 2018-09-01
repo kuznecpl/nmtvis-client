@@ -32,8 +32,8 @@
 
                     </app-sentences-vis>
                 </div>
-                <div id="keyphrase-view" style="height:200px">
-                    <div style="float:left;display: inline-block;vertical-align: top;width: 19%; height: 100%">
+                <div id="keyphrase-view" style="height:200px; display: flex">
+                    <div style="float:left;display: inline-block;vertical-align: top;width: 250px; height: 100%">
                         <mat-card class="example-card" style="padding: 10px;height: 100%;">
                             <mat-card-header>
                                 Keyphrase View
@@ -60,7 +60,7 @@
                         </mat-card>
                     </div>
 
-                    <div *ngIf="true" style="display: inline-block">
+                    <div *ngIf="true" style="width: 100%">
                         <app-parallel-coordinates
                                 (onSortMetric)="sortSentences($event[0], $event[1])"
                                 [sentences]="allSentences"
@@ -68,7 +68,11 @@
                                 [hoverTopic]="hoverTopic"
                                 (onSelectionChange)="onBrushSelectionChange($event)"
                                 [(selectedSentence)]="selectedSentence"
-                                (onSentenceSelection)="scrollToSentence($event)">
+                                (onSentenceSelection)="scrollToSentence($event)"
+                                [defaultSortMetric]="defaultSortMetric"
+                                [defaultSortAscending]="defaultSortAscending"
+                                [defaultBrush]="defaultBrush"
+                                (onBrushExtentChange)="onBrushExtentChange($event)">
 
                         </app-parallel-coordinates>
                     </div>
@@ -101,58 +105,13 @@
                          (mouseleave)="selectedSentence = null;">
 
                         <app-sentence-list-item
+                                *ngIf="hasActiveTopic(sentence) && (!sentence.corrected || (sentence.corrected && showCorrected))"
                                 [sentence]="sentence"
                                 [selectedDocument]="selectedDocument"
                                 [topics]="topics"
                                 [selectedSentence]="selectedSentence">
 
                         </app-sentence-list-item>
-
-                        <!--<div class="sentence" style="padding-top: 5px;font-size: 13px; text-align: justify"
-                             [ngClass]="{'active-sentence': selectedSentence == sentence}">
-                            <span style="width: 45%;display:inline-block;vertical-align: top;">
-                                <a style="text-decoration: none; color: black; vertical-align: middle;"
-                                   [id]="'sentence-' + sentence.id"
-                                   [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]">
-                                    <span *ngFor="let word of textPipe.transform(sentence.source).split(' ')"
-                                          class="source-word"
-                                          [style.background-color]="isHighlighted(word) ? '#ffa50091' : none">
-                                        {{word}}
-                                    </span>
-
-                                </a>
-                            </span>
-                            <span style="width: 45%;display: inline-block; vertical-align: top;padding-left: 10px;">
-                                <a style="text-decoration: none; color: black; vertical-align: middle;"
-                                   [id]="'translation-sentence-' + sentence.id"
-                                   [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]">
-
-                                    <span class="target-word"
-                                          *ngFor="let word of textPipe.transform(sentence.translation, true).split(' ');let j = index;"
-                                          ya
-                                          [style.background-color]="isHighlightedTarget(sentence, word, j) ? '#ffa50091' : none">
-                                        {{word}}
-                                    </span>
-                                </a>
-                            </span>
-                            <button style="" type="button"
-                                    (click)="onSentenceClick(sentence)"
-                                    mat-icon-button
-                                    title="Mark translation as corrected">
-                                <mat-icon [ngStyle]="{'color': sentence.corrected ? 'green' : 'lightgray'}">check_circle
-                                </mat-icon>
-
-                            </button>
-                            <button style="" type="button"
-                                    (click)="onSentenceClick(sentence)"
-                                    mat-icon-button
-                                    title="Edit translation">
-                                <mat-icon style="color: lightgray">edit
-                                </mat-icon>
-
-                            </button>
-                        </div>-->
-                        <mat-divider [inset]="true"></mat-divider>
                     </div>
                 </mat-card-content>
 

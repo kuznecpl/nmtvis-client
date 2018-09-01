@@ -172,6 +172,7 @@ mat-icon {
 
 .foreground path {
     fill: none;
+    stroke-width: 2px;
     stroke: steelblue;
 }
 

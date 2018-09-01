@@ -274,17 +274,28 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
         var maxTextLength = 10;
         var barPadding = 1;
+        var targetBarPadding = 1;
+
+        var attention = this.attention;
 
         var sourceWords = source.split(" ");
         sourceWords.push("EOS")
         var targetWords = translation.split(" ");
 
         var xTargetValues = {0: 0};
+        var wholeWordCount = 0;
+        var furthestRelevantSourceIndex = 0;
         for (var i = 1; i < targetWords.length; i++) {
             xTargetValues[i] = xTargetValues[i - 1] + 0.5 * this.calculateTextWidth(targetWords[i])
                 + 0.5 * this.calculateTextWidth(targetWords[i - 1]) + barPadding;
             if (!targetWords[i - 1].endsWith("@@")) {
                 xTargetValues[i] += 3;
+                wholeWordCount++;
+            }
+            for (var j = 0; j < attention[i].length; j++) {
+                if (attention[i][j] > 0.3) {
+                    furthestRelevantSourceIndex = Math.max(furthestRelevantSourceIndex, j);
+                }
             }
         }
 
@@ -297,8 +308,25 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
             }
         }
 
-        var w = Math.max(xSourceValues[sourceWords.length - 1] + 0.5 * this.calculateTextWidth(sourceWords.slice(-1)[0]),
-                xTargetValues[targetWords.length - 1] + 0.5 * this.calculateTextWidth(targetWords.slice(-1)[0])) + leftMargin;
+        var w1 = xSourceValues[sourceWords.length - 1] + 0.5 * this.calculateTextWidth(sourceWords.slice(-1)[0]);
+        var w2 = xTargetValues[targetWords.length - 1] + 0.5 * this.calculateTextWidth(targetWords.slice(-1)[0]);
+        var relevantW1 = xSourceValues[furthestRelevantSourceIndex] + 0.5 * this.calculateTextWidth(sourceWords[furthestRelevantSourceIndex]);
+
+        if (targetWords.length > 2 && relevantW1 - w2 > 30) {
+            let delta = relevantW1 - w2;
+            targetBarPadding = delta / (wholeWordCount - 1)
+        }
+
+        var wholeWordIndex = 0;
+        for (var i = 0; i < targetWords.length; i++) {
+            xTargetValues[i] += wholeWordIndex * targetBarPadding;
+            if (!targetWords[i].endsWith("@@")) {
+                wholeWordIndex++;
+            }
+        }
+
+        var w = Math.max(w1, w2) + leftMargin;
+
         var margin = {top: 20, right: 20, bottom: 20, left: leftMargin},
             width = w - margin.left - margin.right,
             height = 100 - margin.top - margin.bottom;
@@ -322,8 +350,6 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
         var sourceWords = source.split(" ");
         sourceWords.push("EOS")
         var targetWords = translation.split(" ");
-
-        var attention = this.attention;
 
         svg.append('text').attr("y", topY).attr("x", -textWidth - 50).style("font-weight", "bold")
             .style("text-anchor", "left")

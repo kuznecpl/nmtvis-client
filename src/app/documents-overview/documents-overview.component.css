@@ -2,6 +2,10 @@
     background-color: lightgray;
 }
 
+.document-item {
+    cursor: pointer;
+}
+
 .active-document {
     background: lightgray;
 }
@@ -13,14 +17,6 @@
 .ad-right {
     float: right;
     margin-left: 10px;
-}
-
-.sentence:hover {
-    background: #f3f2f2;
-}
-
-.active-sentence {
-    background: #ffd891;
 }
 
 .topic:hover {

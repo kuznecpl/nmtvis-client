@@ -1,6 +1,5 @@
-import {Component, OnInit, AfterViewInit, Input, Output, OnChanges, EventEmitter} from '@angular/core';
+import {Component, OnInit, AfterViewInit, SimpleChanges, Input, Output, OnChanges, EventEmitter} from '@angular/core';
 import * as d3 from 'd3';
-import cloneElement = __React.cloneElement;
 
 @Component({
     selector: 'app-parallel-coordinates',
@@ -17,6 +16,14 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
     topics;
     @Input()
     hoverTopic;
+    @Input()
+    defaultSortMetric;
+    @Input()
+    defaultSortAscending;
+    @Input()
+    defaultBrush;
+    @Output()
+    onBrushExtentChange = new EventEmitter<any>();
     @Output()
     selectedSentenceChange = new EventEmitter<string>();
     @Output()
@@ -29,6 +36,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
     svg;
     foreground;
     background;
+    axisGroup;
     y;
 
     metricDisplayName = {
@@ -53,6 +61,11 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
         };
     }
 
+    ngAfterViewInit() {
+        console.log("afterViewInit");
+        this.setDefaultBrush();
+    }
+
     ngOnChanges(changes: SimpleChanges) {
         const sentences: SimpleChange = changes.sentences;
 
@@ -62,6 +75,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
         }
         if (changes.sentences) {
             this.updateSentences(sentences.currentValue);
+            this.setDefaultBrush();
         }
         if (changes.selectedSentence) {
             d3.select('.selected-line').classed('selected-line', false);
@@ -74,8 +88,19 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
         if (changes.hoverTopic) {
             var currValue = changes.hoverTopic.currentValue;
             this.onTopicHover(currValue);
-
         }
+    }
+
+    setDefaultBrush() {
+        var that = this;
+        console.log(this.axisGroup.selectAll(".brush"));
+        this.axisGroup.selectAll(".brush")
+            .each(function (d) {
+                if (d in that.defaultBrush) {
+                    var extent = that.defaultBrush[d];
+                    that.y[d].brush.move(d3.select(this), [that.y[d](extent[0]), that.y[d](extent[1])]);
+                }
+            });
     }
 
     updateSentences(sentences) {
@@ -83,8 +108,11 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             return;
         }
 
-        var margin = {top: 30, right: 10, bottom: 20, left: -70},
-            width = 1000 - margin.left - margin.right,
+        var w = d3.select("#parallel-coordinates-box").node().getBoundingClientRect().width;
+        console.log(d3.select("#parallel-coordinates-box").node())
+
+        var margin = {top: 30, right: 10, bottom: 20, left: 10},
+            width = w - margin.left - margin.right,
             height = 220 - margin.top - margin.bottom;
 
         d3.selectAll('#parallel-coordinates-box svg').remove();
@@ -99,7 +127,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
         this.foreground = svg.append("g")
             .attr("class", "foreground");
 
-        var x = d3.scalePoint().range([0, width]).padding(1),
+        var x = d3.scalePoint().range([0, width]).padding(0.3),
             y = {},
             dragging = {};
 
@@ -110,16 +138,21 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
 
         var dimensions;
         var sortDirectionMap = {};
-        var metrics = ["confidence", "length", "keyphrase_score", "order_id", "coverage_penalty"];
+        var metrics = ["order_id", "confidence", "length", "keyphrase_score", "coverage_penalty"];
         // Extract the list of dimensions and create a scale for each.
         dimensions = metrics // d3.keys(sentences[0].score)
             .filter(function (d) {
                 var extent = d3.extent(sentences, function (p) {
                     return +p.score[d];
                 });
+                if (d === "order_id") {
+                    extent = [extent[1], extent[0]];
+                }
+                var range = [height, 0];
+
                 y[d] = d3.scaleLinear()
                     .domain(extent)
-                    .range([height, 0]);
+                    .range(range);
                 sortDirectionMap[d] = true;
                 return true;
             });
@@ -155,6 +188,12 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
                 d3.select('#line-' + d.id).classed("selected-line", true).moveToFront();
                 that.onSentenceSelection.emit(d.id);
                 that.selectedSentenceChange.emit(d);
+            })
+            .style("display", function (d) {
+                return that.isTopicMatch(d) ? "" : "none";
+            })
+            .style("opacity", function (d) {
+                return d.score["confidence"] * d.score["confidence"];
             });
         /*
          .style("stroke", function (d) {
@@ -220,7 +259,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             .text(function (d) {
                 return that.metricDisplayName[d];
             })
-
+        this.axisGroup = axisGroup;
 
         var triangleMap = {false: "0,0 8,8 16,0", true: "0,8 16,8 8,0"};
 
@@ -236,7 +275,16 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             d3.select(".active-sort-icon").classed("active-sort-icon", false);
             d3.select(this).classed("active-sort-icon", true);
             that.switchSortIcon(d3.select(this), sortDirectionMap[d]);
+        }).each(function (d) {
+            if (d === that.defaultSortMetric) {
+                sortDirectionMap[d] = that.defaultSortAscending;
+                that.onSortMetric.emit([d, sortDirectionMap[d]]);
+                d3.select(".active-sort-icon").classed("active-sort-icon", false);
+                d3.select(this).classed("active-sort-icon", true);
+                that.switchSortIcon(d3.select(this), sortDirectionMap[d]);
+            }
         })
+            .style("cursor", "pointer");
 
         // Add and store a brush for each axis.
         axisGroup.append("g")
@@ -252,6 +300,14 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             .attr("x", -8)
             .attr("width", 16);
 
+        function extent(brush, d) {
+            if (brush !== "order_id") {
+                return brush.extent([[-7, y[d].range()[1]], [7, y[d].range()[0]]]);
+            } else {
+                return brush.extent([[-7, y[d].range()[0]], [7, y[d].range()[1]]]);
+            }
+
+        }
 
         function position(d) {
             var v = dragging[d];
@@ -271,12 +327,15 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
         }
 
         function brushstart() {
-            d3.event.sourceEvent.stopPropagation();
+            if (d3.event.sourceEvent) {
+                d3.event.sourceEvent.stopPropagation();
+            }
         }
 
         // Handles a brush event, toggling the display of foreground lines.
         function brush() {
             var actives = [];
+            var brushMap = {};
             svg.selectAll(".brush")
                 .filter(function (d) {
                     return d3.brushSelection(this);
@@ -288,13 +347,20 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
                         dimension: d,
                         extent: extent,
                     });
+                    brushMap[d] = extent;
                 });
+            that.onBrushExtentChange.emit(brushMap);
 
             var selected = [];
-
             foreground.style("display", function (d) {
                 let display = actives.every(function (p) {
-                        return p.extent[0] >= d.score[p.dimension] && d.score[p.dimension] >= p.extent[1];
+                        var result = false;
+                        if (p.dimension !== "order_id") {
+                            result = p.extent[0] >= d.score[p.dimension] && d.score[p.dimension] >= p.extent[1];
+                        } else {
+                            result = p.extent[0] <= d.score[p.dimension] && d.score[p.dimension] <= p.extent[1];
+                        }
+                        return result;
                     }) && that.isTopicMatch(d);
                 if (display) {
                     selected.push(d);
@@ -333,14 +399,24 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
 
         this.foreground.style("display", function (d) {
             let display = actives.every(function (p) {
-                    return p.extent[0] >= d.score[p.dimension] && d.score[p.dimension] >= p.extent[1];
+                    var result = false;
+                    if (p.dimension !== "order_id") {
+                        result = p.extent[0] >= d.score[p.dimension] && d.score[p.dimension] >= p.extent[1];
+                    } else {
+                        result = p.extent[0] <= d.score[p.dimension] && d.score[p.dimension] <= p.extent[1];
+                    }
+                    return result;
                 }) && that.isTopicMatch(d);
+            if (display) {
+                selected.push(d);
+            }
             return display ? null : 'none';
         });
         this.background.style("display", function (d) {
             let display = that.isTopicMatch(d);
             return display ? null : 'none';
         });
+        that.onSelectionChange.emit(selected);
     }
 
     onTopicHover(topic) {
@@ -369,7 +445,13 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
 
         this.foreground.style("display", function (d) {
             let display = actives.every(function (p) {
-                    return p.extent[0] >= d.score[p.dimension] && d.score[p.dimension] >= p.extent[1];
+                    var result = false;
+                    if (p.dimension !== "order_id") {
+                        result = p.extent[0] >= d.score[p.dimension] && d.score[p.dimension] >= p.extent[1];
+                    } else {
+                        result = p.extent[0] <= d.score[p.dimension] && d.score[p.dimension] <= p.extent[1];
+                    }
+                    return result;
                 }) && that.isTopicMatch(d) && (topic ? that.isMatch(topic, d) : true);
             return display ? null : 'none';
         });
