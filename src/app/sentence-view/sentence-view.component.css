@@ -33,8 +33,10 @@
 
 .zoom-buttons {
     position: absolute;
-    float: right;
-    right: 90px;
-    top: 245px;
-    margin-top: 10px;
+    right: 100px;
+    top: 320px;
+}
+
+textarea {
+    height: 1.5em;
 }

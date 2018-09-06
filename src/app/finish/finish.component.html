@@ -3,19 +3,18 @@
     Thanks for your participation!
 </div>
 
-<div *ngFor="let metric of metrics">
-    <div *ngIf="metric">
-        <div>Sentence: {{ metric.sentence}} Translation: {{ metric.translation }}</div>
-        <div>Events:</div>
-
-        <div *ngFor="let event of metric.events">
-            <span>{{ event.time + '|' + event.type + '|' + event.val }}</span>
-        </div>
-
-        <br>
+<div *ngFor="let question of objectKey(survey)">
+    <div *ngIf="textQuestions.indexOf(question) === -1">
+        {{ question }} [ <span *ngFor="let answer of survey[question]">{{ answer }} ,</span> ]
     </div>
 </div>
-<div *ngFor="let question of objectKey(survey)">
-    {{ question  + ':' + survey[question]}}
+<div *ngFor="let textQuestion of textQuestions">
+    <div *ngIf="survey[textQuestion]" style="margin: 10px;">
+        <h2>{{ textQuestion}}</h2>
+        <div style="text-align: start;border: 2px dashed gray; padding: 10px; width: 300px; margin:auto; margin-bottom: 10px;"
+             *ngFor="let answer of survey[textQuestion]">
+            {{ answer }}
+        </div>
+    </div>
 </div>
 

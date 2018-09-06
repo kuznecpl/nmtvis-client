@@ -34,6 +34,11 @@ export class DocumentService {
             {"corrected": corrected});
     }
 
+    setFlagged(document_id: string, sentence_id: string, flagged: boolean) {
+        return this.http.post(this.documentsUrl + "/" + document_id + "/sentences/" + sentence_id + "/flagged",
+            {"flagged": flagged});
+    }
+
     retrain(document_id: string) {
         return this.http.post(this.documentsUrl + "/" + document_id + "/retrain");
     }

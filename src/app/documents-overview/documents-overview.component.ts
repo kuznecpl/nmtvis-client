@@ -1,4 +1,4 @@
-import {Component, OnInit, Inject} from '@angular/core';
+import {Component, OnInit, Inject, AfterViewInit} from '@angular/core';
 import {Document} from '../models/document';
 import {DocumentService} from '../services/document.service';
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
@@ -11,16 +11,21 @@ import * as d3 from 'd3';
     templateUrl: './documents-overview.component.html',
     styleUrls: ['./documents-overview.component.css']
 })
-export class DocumentsOverviewComponent implements OnInit {
+export class DocumentsOverviewComponent implements OnInit, AfterViewInit {
 
     documents = [];
     allSentences = [];
     selectedDocument;
     selectedSentence;
     newDocumentName;
-    showCorrected = true;
+    showCorrected = false;
+    showFlagged = false;
     retrainText = "Retrain";
     retranslateText = "Retranslate";
+    retraining = false;
+    retranslating = false;
+
+    numChanges = 0;
     metrics = [
         {name: "coverage_penalty", color: "lightblue", shortname: "CP"},
         {name: "coverage_deviation_penalty", color: "green", shortname: "CDP"},
@@ -44,15 +49,7 @@ export class DocumentsOverviewComponent implements OnInit {
 
     constructor(readonly documentService: DocumentService, public dialog: MatDialog, private route: ActivatedRoute,
                 private textPipe: TextDisplayPipe) {
-        this.documentService.getDocuments()
-            .subscribe(documents => {
-                this.documents = documents;
-                if (this.documents.length > 0) {
-                    this.loadSortSettings();
-                    this.onClick(this.documents[0]);
-                    this.loadTopics();
-                }
-            });
+
     }
 
     isHighlighted(word) {
@@ -130,6 +127,22 @@ export class DocumentsOverviewComponent implements OnInit {
             active: false,
         });
         this.newKeyphrase = "";
+        this.computeTopicOccurrences();
+    }
+
+    computeTopicOccurrences() {
+        for (let topic of this.topics) {
+            topic.occurrences = 0;
+            for (let sentence of this.selectedDocument.sentences) {
+                if (this.isVisible(sentence) && this.isTopicMatch(sentence.source.replace(/@@ /g, ""), topic)) {
+                    topic.occurrences++;
+                }
+            }
+        }
+    }
+
+    ngAfterViewInit() {
+
     }
 
     hasActiveTopic(sentence) {
@@ -211,6 +224,7 @@ export class DocumentsOverviewComponent implements OnInit {
     loadTopics() {
         if (this.selectedDocument && localStorage.getItem(this.selectedDocument.id + "-topics") !== null) {
             this.topics = JSON.parse(localStorage.getItem(this.selectedDocument.id + "-topics"));
+            console.log("Loaded topics")
         }
     }
 
@@ -222,6 +236,13 @@ export class DocumentsOverviewComponent implements OnInit {
         this.defaultBrush = JSON.parse(localStorage.getItem(this.selectedDocument.id + "-brush"));
     }
 
+    loadSelectedSentenceId() {
+        if (localStorage.getItem(this.selectedDocument.id + "-selectedSentenceId")) {
+            return localStorage.getItem(this.selectedDocument.id + "-selectedSentenceId");
+        }
+        return null;
+    }
+
     cacheTopics() {
         if (this.selectedDocument) {
             localStorage.setItem(this.selectedDocument.id + "-topics", JSON.stringify(this.topics));
@@ -231,7 +252,23 @@ export class DocumentsOverviewComponent implements OnInit {
     ngOnDestroy() {
         localStorage.setItem("sortMetric", this.currentSortMetric);
         localStorage.setItem("sortAscending", "" + this.currentSortAscending);
+        if (this.selectedSentence) {
+            localStorage.setItem(this.selectedDocument.id + "-selectedSentenceId", "" + this.selectedSentence.id);
+        }
         this.cacheTopics();
+    }
+
+    scrollToLastSelectedSentence() {
+        let selectedSentenceId = this.loadSelectedSentenceId();
+        if (selectedSentenceId) {
+            for (var j = 0; j < this.selectedDocument.sentences.length; j++) {
+                if (this.selectedDocument.sentences[j].id === selectedSentenceId) {
+                    this.selectedSentence = this.selectedDocument.sentences[j];
+                    break;
+                }
+            }
+            this.scrollToSentence(selectedSentenceId);
+        }
     }
 
 
@@ -241,6 +278,24 @@ export class DocumentsOverviewComponent implements OnInit {
             this.sentenceId = params.get("sentence_id");
 
             if (!this.documentId || !this.sentenceId) {
+                this.documentService.getDocuments()
+                    .subscribe(documents => {
+                        this.documents = documents;
+                        var that = this;
+                        if (this.documents.length > 0) {
+                            this.loadSortSettings();
+                            this.onClick(this.documents[0], () => {
+
+                                this.loadTopics();
+                                setTimeout(function () {
+                                    that.scrollToLastSelectedSentence();
+                                    that.computeTopicOccurrences();
+                                }, 2000);
+
+                            });
+                        }
+                    });
+
                 return;
             }
 
@@ -249,21 +304,19 @@ export class DocumentsOverviewComponent implements OnInit {
             this.documentService.getDocuments()
                 .subscribe(documents => {
                     this.documents = documents;
+                    var that = this;
                     for (var i = 0; i < this.documents.length; i++) {
                         if (this.documents[i].id === this.documentId) {
+                            this.loadSortSettings();
                             this.onClick(this.documents[i], () => {
 
-                                for (var j = 0; j < this.selectedDocument.sentences.length; j++) {
-                                    if (this.selectedDocument.sentences[j].id === this.sentenceId) {
-                                        this.selectedSentence = this.selectedDocument.sentences[j];
-                                        break;
-                                    }
-                                }
+                                this.loadTopics();
+                                setTimeout(function () {
+                                    that.scrollToLastSelectedSentence();
+                                    that.computeTopicOccurrences();
+                                }, 2000);
 
-                                this.scrollParentToChild(document.getElementById("document-scroll"),
-                                    document.getElementById("sentence-" + this.sentenceId));
                             });
-
                             return;
                         }
                     }
@@ -279,9 +332,11 @@ export class DocumentsOverviewComponent implements OnInit {
 
     onBrushSelectionChange(sentences) {
         this.selectedDocument.sentences = this.sortGivenSentences(sentences, this.currentSortMetric, this.currentSortAscending);
+        this.computeTopicOccurrences();
     }
 
     scrollToSentence(sentenceId) {
+        console.log("Scrolling to " + sentenceId)
         this.scrollParentToChild(document.getElementById("document-scroll"),
             document.getElementById("sentence-" + sentenceId));
     }
@@ -311,6 +366,14 @@ export class DocumentsOverviewComponent implements OnInit {
         }
     }
 
+    isVisible(sentence) {
+        if (!sentence) {
+            return false;
+        }
+        return (sentence.flagged || !this.showFlagged)
+            && this.hasActiveTopic(sentence) && (!this.showCorrected || !sentence.corrected);
+    }
+
     get correctedSentences() {
         if (!this.selectedDocument || !this.selectedDocument.sentences) {
             return "";
@@ -322,7 +385,7 @@ export class DocumentsOverviewComponent implements OnInit {
                 count++;
             }
         }
-        return count + " of " + this.selectedDocument.sentences.length;
+        return count;
     }
 
     onSentenceClick(sentence) {
@@ -335,7 +398,7 @@ export class DocumentsOverviewComponent implements OnInit {
     }
 
     cacheSentences() {
-        localStorage.setItem(this.selectedDocument.id + "-sentences", JSON.stringify(this.selectedDocument.sentences));
+        //localStorage.setItem(this.selectedDocument.id + "-sentences", JSON.stringify(this.selectedDocument.sentences));
     }
 
     loadCachedSentences() {
@@ -354,14 +417,14 @@ export class DocumentsOverviewComponent implements OnInit {
         this.topics = document.keyphrases;
         this.loadTopics();
         this.loadDefaultBrush();
-        let result = this.loadCachedSentences();
-        this.loading = !result;
+        //let result = this.loadCachedSentences();
+        this.loading = false;
 
         this.documentService.getSentences(document.id)
             .subscribe(sentences => {
                 this.selectedDocument.sentences = sentences;
+                this.computeTopicOccurrences();
                 this.allSentences = sentences;
-                console.log(sentences.slice(0, 10));
                 this.cacheSentences();
                 //this.allSentences = sentences;
                 //this.onActiveTopicChange();
@@ -369,24 +432,29 @@ export class DocumentsOverviewComponent implements OnInit {
                 //this.onShowCorrected();
                 callback();
                 this.loading = false;
+                this.computeTopicOccurrences();
             });
     }
 
     onRetrainClick() {
         this.retrainText = "Training...";
+        this.retraining = true;
         this.documentService.retrain(this.selectedDocument.id)
             .subscribe(res => {
                 this.retrainText = "Retrain";
-                console.log(res);
+                this.retraining = false;
             })
     }
 
     onRetranslateClick() {
         this.retranslateText = "Translating...";
+        this.retranslating = true;
         this.documentService.retranslate(this.selectedDocument.id)
             .subscribe(res => {
                 this.onClick(this.selectedDocument);
                 this.retranslateText = "Retranslate";
+                this.numChanges = res.numChanges;
+                this.retranslating = false;
             })
     }
 
@@ -414,13 +482,14 @@ export class DocumentsOverviewComponent implements OnInit {
 export class DocumentUploadDialog {
 
     httpUri = "http://46.101.224.19:5000/upload";
+    documentName = "";
 
     constructor(public dialogRef: MatDialogRef<DocumentUploadDialog>,
                 @Inject(MAT_DIALOG_DATA) public data: any) {
     }
 
     get uri() {
-        return this.httpUri + "?document_name=" + this.data.newDocumentName;
+        return this.httpUri + "?document_name=" + this.documentName;
     }
 
     onNoClick(): void {

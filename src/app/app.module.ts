@@ -13,6 +13,7 @@ import {MatCardModule} from '@angular/material/card';
 import {MatSidenavModule} from '@angular/material/sidenav';
 import {MatTableModule} from '@angular/material/table';
 import {MatListModule} from '@angular/material/list';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatCheckboxModule} from '@angular/material/checkbox';
@@ -46,7 +47,7 @@ import {IntroComponent} from './intro/intro.component';
 const appRoutes: Routes = [
     {path: 'login', component: LoginComponent, canActivate: [LoggedinRedirect]},
     {path: 'intro', component: IntroComponent, canActivate: [EnsureAuthenticated]},
-    {path: 'register', component: RegisterComponent, canActivate: [LoggedinRedirect]},
+    {path: 'register', component: RegisterComponent},
     {path: 'documents', component: DocumentsOverviewComponent, canActivate: [EnsureAuthenticated]},
     {path: 'start', component: StartExperimentComponent, canActivate: [EnsureAuthenticated]},
     {path: 'finish', component: FinishComponent, canActivate: [EnsureAuthenticated]},
@@ -85,7 +86,7 @@ const appRoutes: Routes = [
         BrowserModule, HttpClientModule, FormsModule, BrowserAnimationsModule, MatSnackBarModule,
         MatButtonModule, MatToolbarModule, MatInputModule, MatProgressSpinnerModule, MatCheckboxModule,
         MatIconModule, MatCardModule, MatTableModule, MatSidenavModule, MatListModule, MatDividerModule,
-        MatSliderModule, MatInputModule, MatGridListModule, MatDialogModule, MatFileUploadModule,
+        MatSliderModule, MatInputModule, MatGridListModule, MatDialogModule, MatFileUploadModule, MatProgressBarModule,
         RouterModule.forRoot(
             appRoutes, // <-- debugging purposes only
         )

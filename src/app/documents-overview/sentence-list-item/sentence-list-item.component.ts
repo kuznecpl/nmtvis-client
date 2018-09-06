@@ -90,6 +90,22 @@ export class SentenceListItemComponent implements OnInit, OnChanges {
 
         this.documentService.setCorrected(this.selectedDocument.id, sentence.id, sentence.corrected)
             .subscribe(result => {
+                if (sentence.flagged) {
+                    sentence.flagged = false;
+                    this.documentService.setFlagged(this.selectedDocument.id, sentence.id, sentence.flagged)
+                        .subscribe(result => {
+
+                        });
+                }
+            });
+    }
+
+    onSentenceFlag(sentence, event) {
+        event.stopPropagation();
+        sentence.flagged = !sentence.flagged;
+
+        this.documentService.setFlagged(this.selectedDocument.id, sentence.id, sentence.flagged)
+            .subscribe(result => {
 
             });
     }

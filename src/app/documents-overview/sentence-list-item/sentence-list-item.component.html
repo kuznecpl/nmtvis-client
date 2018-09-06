@@ -28,13 +28,22 @@
                   [style.background-color]="isHighlightedTarget(sentence, word, j) ? '#ffa50091' : none">
                 {{word}}
             </span>
+            <div innerHTML="{{ sentence.diff }}"></div>
         </a>
     </span>
     <button style="" type="button"
             (click)="onSentenceClick(sentence, $event)"
             mat-icon-button
             title="Mark translation as corrected">
-        <mat-icon [ngStyle]="{'color': sentence.corrected ? 'green' : 'lightgray'}">check_circle
+        <mat-icon [ngStyle]="{'color': sentence.corrected ? 'green' : 'lightgray'}">check
+        </mat-icon>
+
+    </button>
+    <button style="" type="button"
+            (click)="onSentenceFlag(sentence, $event)"
+            mat-icon-button
+            title="Flag translation for correction">
+        <mat-icon [ngStyle]="{'color': sentence.flagged ? '#f44336' : 'lightgray'}">flag
         </mat-icon>
 
     </button>

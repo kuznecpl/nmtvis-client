@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import {BeamNodeDialog} from './sentence-view.component';
+//import {BeamNodeDialog} from './sentence-view.component';
 
 export class BeamTree {
 
@@ -9,6 +9,7 @@ export class BeamTree {
     colorScale;
     colors;
     zoom;
+    zoomLevel = 1;
     colorLegend;
     hoveredNode;
     focusNode;
@@ -21,7 +22,7 @@ export class BeamTree {
     }
 
     build() {
-        var margin = {top:50, right: 30, bottom: 50, left: 50},
+        var margin = {top: 50, right: 30, bottom: 50, left: 50},
             width = 1350 - margin.left - margin.right,
             height = 390 - margin.top - margin.bottom;
         this.height = height;
@@ -29,45 +30,42 @@ export class BeamTree {
         // append the svg object to the body of the page
         // appends a 'group' element to 'svg'
         // moves the 'group' element to the top left margin
-        d3.selectAll("#tree-vis").remove();
-        this.svg = d3.select("#tree").append("svg")
+        d3.select("#tree-vis").selectAll('*').remove();
+        this.svg = d3.select("#tree-vis")
             .attr("width", width + margin.right + margin.left)
             .attr("height", height + margin.top + margin.bottom)
             .style("background", "#f0f0f0")
             .attr("id", "tree-vis")
-            .append("g")
-            .attr("transform", "translate("
-                + margin.left + "," + margin.top + ")");
+            .append("g");
+        //.attr("transform", "translate("
+        //    + margin.left + "," + margin.top + ")");
 
         var tree = this;
 
         this.zoom = d3.zoom().scaleExtent([0.5, 2]).on("zoom", function () {
+            tree.zoomLevel = d3.event.transform.k;
             tree.svg.attr("transform", d3.event.transform);
         });
 
         d3.select('#tree-vis')
             .on("mousedown", function () {
             })
-            .call(this.zoom);
+            .call(this.zoom)
+            .on("dblclick.zoom", null)
+            .call(this.zoom.translateBy, margin.left, margin.top)
 
         d3.select('#zoom-in').on('click', function () {
             // Smooth zooming
-            tree.zoom.scaleBy(tree.svg.transition().duration(500), 1.3);
+            tree.zoom.scaleBy(d3.select('#tree-vis').transition().duration(500), 1.3);
         });
 
         d3.select('#zoom-out').on('click', function () {
             // Ordinal zooming
-            tree.zoom.scaleBy(tree.svg.transition().duration(500), 1 / 1.3);
+            tree.zoom.scaleBy(d3.select('#tree-vis').transition().duration(500), 1 / 1.3);
         });
 
         d3.select('body').on("keydown", function () {
             tree.keydown(tree);
-        });
-        d3.select('input').on("keydown", function () {
-            d3.event.stopPropagation();
-        });
-        d3.select('textarea').on("keydown", function () {
-            d3.event.stopPropagation();
         });
 
         var i = 0,
@@ -441,7 +439,6 @@ export class BeamTree {
         if (!d) {
             return;
         }
-        console.log(fn);
         fn(d);
         this.visitAncestors(d.parent, fn);
     }
@@ -488,42 +485,42 @@ export class BeamTree {
                 that.beamAttention = [];
                 that.beamAttention = d.data.attn[0].slice(0, that.sentence.length);
 
-                var dialogRef = that.dialog.open(BeamNodeDialog, {
-                    width: "400px",
-                    data: {
-                        attention: that.beamAttention,
-                        partial: that.partial,
-                        sentence: that.sentence,
-                        word: "",
-                        sentenceView: that,
-                    },
-                });
+                /*var dialogRef = that.dialog.open(BeamNodeDialog, {
+                 width: "400px",
+                 data: {
+                 attention: that.beamAttention,
+                 partial: that.partial,
+                 sentence: that.sentence,
+                 word: "",
+                 sentenceView: that,
+                 },
+                 });*/
+                /*
+                 dialogRef.afterClosed().subscribe(result => {
+                 if (!result) {
+                 // dialog cancelled
+                 return;
+                 }
+                 if (d.data.name === "UNK" && result.word.length > 0) {
+                 this.addToDocumentUnkMap(d, result.word);
 
-                dialogRef.afterClosed().subscribe(result => {
-                    if (!result) {
-                        // dialog cancelled
-                        return;
-                    }
-                    if (d.data.name === "UNK" && result.word.length > 0) {
-                        this.addToDocumentUnkMap(d, result.word);
-
-                        var partial = this.getPath(d);
-                        that.unkMap[partial] = result.word;
-                        that.onCorrectionChange(result.word);
-                        that.addEvent("unk-edit", this.getPath(d) + "=>" + result.word);
-                    }
-                    else if (result.word.length > 0) {
-                        this.addToCorrectionMap(result.word, that.partial)
-                        if (that.partial in that.unkMap) {
-                            delete that.unkMap[that.partial];
-                        }
-                        that.onCorrectionChange(result.word);
-                        that.addEvent("beam-edit", this.getPath(d) + " " + d.data.name + "=>" + result.word);
-                    } else {
-                        that.attentionOverrideMap[that.partial] = that.beamAttention.slice();
-                        that.onAttentionChange();
-                    }
-                });
+                 var partial = this.getPath(d);
+                 that.unkMap[partial] = result.word;
+                 that.onCorrectionChange(result.word);
+                 that.addEvent("unk-edit", this.getPath(d) + "=>" + result.word);
+                 }
+                 else if (result.word.length > 0) {
+                 this.addToCorrectionMap(result.word, that.partial)
+                 if (that.partial in that.unkMap) {
+                 delete that.unkMap[that.partial];
+                 }
+                 that.onCorrectionChange(result.word);
+                 that.addEvent("beam-edit", this.getPath(d) + " " + d.data.name + "=>" + result.word);
+                 } else {
+                 that.attentionOverrideMap[that.partial] = that.beamAttention.slice();
+                 that.onAttentionChange();
+                 }
+                 });*/
             }
             this.update(d);
             return;
@@ -566,6 +563,7 @@ export class BeamTree {
          var currPartial = partial.split(" ").concat(words.slice(0, i)).join(" ");
          this.that.correctionMap[currPartial] = words[i];
          }*/
+        this.that.correctionMap = {};
         this.that.correctionMap[partial] = this.that.encodeText(correction);
     }
 
@@ -610,14 +608,14 @@ export class BeamTree {
         if (!d) {
             return;
         }
-        console.log("removing " + d)
+
         var index = -1;
         for (var i = 0; i < d.children.length; i++) {
             if (d.children[i].isEdit) {
                 index = i;
             }
         }
-        console.log(index);
+
         if (index > -1) {
             d.children.splice(index, 1);
         }
@@ -738,7 +736,17 @@ export class BeamTree {
     }
 
     mouseover(d, el) {
+        this.onMouseover(d, el);
+        this.center(d);
+        d3.selectAll('.focus-path').classed("focus-path", false);
+        this.visitAncestors(d, node => {
+            this.getNodeSelection(node).classed("focus-path", true);
+        });
+    }
+
+    onMouseover(d, el) {
         var that = this.that;
+        //this.center(d);
         that.addEvent("node-hover", this.getPath(d) + " " + d.data.name);
 
         if (!d.data.isCandidate && d.data.attn) {
@@ -783,18 +791,15 @@ export class BeamTree {
             this.that.translation = this.getRawTranslation(this.focusNode);
             this.that.updateTranslation(this.that.sentence.join(" "), this.that.translation.join(" "));
 
-            this.mouseover(this.focusNode, this.getNodeSelection(this.focusNode))
+            this.onMouseover(this.focusNode, this.getNodeSelection(this.focusNode))
             this.that.mouseoverTargetWord(this.that.translation.length - 1, this.that.attention);
         }
-
         // Center view on focus node
         var transform = this.getTransformation(this.svg.attr("transform"));
-        var xTranslate = 650 - (transform.translateX + d.y);
+        var xTranslate = 850 - (transform.translateX + d.y);
         var yTranslate = 195 - (transform.translateY + d.x);
-        if (transform.translateX + d.y > 1200 || transform.translateX + d.y < 50) {
-            this.svg.transition().duration(1000)
-                .attr("transform", "translate(" + (transform.translateX + xTranslate) + "," + transform.translateY + ")");
-
+        if (dir && (transform.translateX + d.y > 1200 || transform.translateX + d.y < 50)) {
+            this.zoom.translateBy(d3.select('#tree-vis').transition().duration(1000), xTranslate, 0);
         }
     }
 
@@ -807,6 +812,10 @@ export class BeamTree {
     }
 
     keydown(tree) {
+        if (d3.event.target.nodeName === 'TEXTAREA' || d3.event.target.nodeName === 'INPUT') {
+            return;
+        }
+
         switch (d3.event.keyCode) {
             case 13: // Enter
                 this.currentInput = "";
@@ -819,6 +828,7 @@ export class BeamTree {
                 break;
             }
             case 8: { // Backspace
+                // BACKSPACE_KEY was fired in <input id="textbox">
                 if (this.currentInput.length > 1) {
                     this.currentInput = this.currentInput.slice(0, -1);
                 } else {
@@ -870,11 +880,12 @@ export class BeamTree {
         }
 
         var key = d3.event.key;
-        if (key.length === 1 && !(key == " " && this.currentInput.length === 0)) {
+        if (this.focusNode.data.name !== "EOS" && key.length === 1 && !(key == " " && this.currentInput.length === 0)) {
             this.currentInput += key;
 
             var node = this.getBeamNode(this.treeData, this.getPathList(this.focusNode).slice(1));
             if (!this.focusNode.data.isEdit && !this.hasEditChild(this.focusNode)) {
+                this.currentInput = key;
                 node.children.push({
                     attn: [],
                     name: this.currentInput,
@@ -884,7 +895,7 @@ export class BeamTree {
                     isCandidate: true,
                     isEdit: true,
                 });
-            } else {
+            } else if (this.focusNode.data.isEdit) {
                 node.name = this.currentInput;
             }
             this.updateData(this.treeData);
@@ -897,7 +908,6 @@ export class BeamTree {
             this.updateData(this.treeData);
         } else if (this.hasEditChild(this.focusNode)) {
             var node = this.getBeamNode(this.treeData, this.getPathList(this.focusNode).slice(1));
-            console.log(node)
             this.removeEditChild(node);
             this.updateData(this.treeData);
             this.center(this.focusNode)
@@ -1104,6 +1114,7 @@ export class BeamTree {
             .attr("x", 0)
             .attr("y", 300)
             .attr("width", "300px")
+            .attr("height", "30px")
             .html("<span>Type any <kbd>key</kbd> for custom correction</span>")
             .style("font-size", "12px");
 
@@ -1111,18 +1122,29 @@ export class BeamTree {
             .append("foreignObject")
             .attr("x", 0)
             .attr("y", 325)
-            .attr("width", "300px")
-            .html("<span>Select/Edit with <kbd>ENTER</kbd>, Delete with <kbd>BACKSPACE</kbd></span>")
+            .attr("height", "30px")
+            .attr("width", "350px")
+            .html("<span>Select/Edit with <kbd>ENTER</kbd> or click, delete with <kbd>BACKSPACE</kbd></span>")
             .style("font-size", "12px");
 
         rect
             .append("foreignObject")
             .attr("x", 0)
             .attr("y", 350)
+            .attr("height", "30px")
             .attr("width", "300px")
             .html("<span>Navigate with <kbd>TAB</kbd> and <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></span>")
             .style("font-size", "12px");
 
+
+        rect
+            .append("foreignObject")
+            .attr("x", 500)
+            .attr("y", 350)
+            .attr("height", "30px")
+            .attr("width", "300px")
+            .html('')
+            .style("font-size", "12px");
 
         rect
             .append("text")

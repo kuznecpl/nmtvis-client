@@ -21,7 +21,7 @@ export class RegisterComponent implements OnInit {
             .subscribe(result => {
                 localStorage.setItem('access_token', result.access_token);
                 localStorage.setItem('username', result.username);
-                this.router.navigate(['/documents']);
+                this.router.navigate(['/intro']);
             }, error => {
                 this.error = error.error.msg;
             });

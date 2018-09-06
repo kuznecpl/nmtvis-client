@@ -32,7 +32,7 @@
 
                     </app-sentences-vis>
                 </div>
-                <div id="keyphrase-view" style="height:200px; display: flex">
+                <div *ngIf="true" id="keyphrase-view" style="height:200px; display: flex">
                     <div style="float:left;display: inline-block;vertical-align: top;width: 250px; height: 100%">
                         <mat-card class="example-card" style="padding: 10px;height: 100%;">
                             <mat-card-header>
@@ -41,14 +41,18 @@
                             <mat-card-content style="height: 80%;">
                                 <div style="overflow-y: scroll;text-align: start;height: 90%;">
                                     <div *ngFor="let topic of topics">
-                                        <div class="topic" style="padding:2px;" (mouseenter)="hoverTopic=topic"
-                                             (mouseleave)="hoverTopic = null">
-                                            <mat-checkbox style="display:inline" [name]="topic.name"
-                                                          [(ngModel)]="topic.active" (change)="onActiveTopicChange()">
-                                                {{topic.name}} <span style="color: #a8a8a8">{{topic.occurrences}}</span>
-                                            </mat-checkbox>
+                                        <div *ngIf="topic.occurrences > 0">
+                                            <div class="topic" style="padding:2px;" (mouseenter)="hoverTopic=topic"
+                                                 (mouseleave)="hoverTopic = null">
+                                                <mat-checkbox style="display:inline" [name]="topic.name"
+                                                              [(ngModel)]="topic.active"
+                                                              (change)="onActiveTopicChange()">
+                                                    {{topic.name}} <span
+                                                        style="color: #a8a8a8">{{topic.occurrences}}</span>
+                                                </mat-checkbox>
+                                            </div>
+                                            <mat-divider [inset]="true"></mat-divider>
                                         </div>
-                                        <mat-divider [inset]="true"></mat-divider>
                                     </div>
                                 </div>
                                 <mat-form-field style="width:100%;">
@@ -94,18 +98,17 @@
                     </mat-progress-spinner>
 
                     <div style="text-align: center;margin-top: 50px;color: gray;"
-                         *ngIf="!loading && selectedDocument.sentences.length === 0">
+                         *ngIf="!loading && selectedDocument.sentences && selectedDocument.sentences.length === 0">
                         No sentences found for current filters
                     </div>
 
                     <div *ngFor="let sentence of selectedDocument.sentences; let i = index;"
                          style=""
                          class=""
-                         (mouseenter)="selectedSentence = sentence;"
-                         (mouseleave)="selectedSentence = null;">
+                         (mouseenter)="selectedSentence = sentence;">
 
                         <app-sentence-list-item
-                                *ngIf="hasActiveTopic(sentence) && (!sentence.corrected || (sentence.corrected && showCorrected))"
+                                *ngIf="isVisible(sentence)"
                                 [sentence]="sentence"
                                 [selectedDocument]="selectedDocument"
                                 [topics]="topics"
@@ -116,22 +119,47 @@
                 </mat-card-content>
 
                 <div style="">
-                    <span>Corrected {{ correctedSentences }}</span>
+                    <span *ngIf="selectedDocument" style="display: inline-block; float:left;">
+                        Corrected <span class="number-display">{{ correctedSentences }}</span> of <span
+                            class="number-display">{{ selectedDocument.sentences.length}}</span>
+                        ({{ (correctedSentences / selectedDocument.sentences.length) | percent}})
+                    </span>
 
                     <form class="example-form" style="display: inline;margin-left: 20px;">
                         <mat-checkbox (change)="onShowCorrected($event[0])" name="showCorrected"
-                                      [(ngModel)]="showCorrected">Show corrected
+                                      [(ngModel)]="showCorrected">Hide corrected
+                        </mat-checkbox>
+                    </form>
+
+                    <form class="example-form" style="display: inline;margin-left: 20px;">
+                        <mat-checkbox (change)="onShowFlagged($event[0])" name="showFlagged"
+                                      [(ngModel)]="showFlagged">Show flagged
                         </mat-checkbox>
                     </form>
 
                     <button type="button" style="float: right;" (click)="onRetrainClick()" mat-raised-button
                             color="primary">{{ retrainText }}
+                        <mat-icon style="font-size:16px; vertical-align: sub">repeat
+                        </mat-icon>
                     </button>
                     <button type="button" style="float: right;margin-right: 10px;" (click)="onRetranslateClick()"
                             mat-raised-button
                             color="primary">{{ retranslateText }}
+                        <mat-icon style="font-size:16px; vertical-align: sub">repeat
+                        </mat-icon>
                     </button>
+
+                    <span *ngIf="numChanges > 0">
+                        {{numChanges}} changes
+                    </span>
                 </div>
+
+                <mat-progress-bar style="padding-top:5px;" *ngIf="retranslating || retraining"
+                                  class="example-margin"
+                                  [color]="'primary'"
+                                  [mode]="'indeterminate'">
+                </mat-progress-bar>
+
 
             </mat-card>
         </div>

@@ -1,4 +1,14 @@
-import {Component, OnInit, AfterViewInit, SimpleChanges, Input, Output, OnChanges, EventEmitter} from '@angular/core';
+import {
+    Component,
+    OnInit,
+    AfterViewInit,
+    SimpleChanges,
+    SimpleChange,
+    Input,
+    Output,
+    OnChanges,
+    EventEmitter
+} from '@angular/core';
 import * as d3 from 'd3';
 
 @Component({
@@ -61,11 +71,6 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
         };
     }
 
-    ngAfterViewInit() {
-        console.log("afterViewInit");
-        this.setDefaultBrush();
-    }
-
     ngOnChanges(changes: SimpleChanges) {
         const sentences: SimpleChange = changes.sentences;
 
@@ -83,7 +88,8 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
                 return;
             }
             let id = changes.selectedSentence.currentValue.id;
-            d3.select('#line-' + id).classed("selected-line", true).moveToFront();
+            var el: any = d3.select('#line-' + id).classed("selected-line", true);
+            el.moveToFront();
         }
         if (changes.hoverTopic) {
             var currValue = changes.hoverTopic.currentValue;
@@ -93,10 +99,12 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
 
     setDefaultBrush() {
         var that = this;
-        console.log(this.axisGroup.selectAll(".brush"));
+        if (!this.axisGroup) {
+            return;
+        }
         this.axisGroup.selectAll(".brush")
             .each(function (d) {
-                if (d in that.defaultBrush) {
+                if (that.defaultBrush && d in that.defaultBrush) {
                     var extent = that.defaultBrush[d];
                     that.y[d].brush.move(d3.select(this), [that.y[d](extent[0]), that.y[d](extent[1])]);
                 }
@@ -108,7 +116,8 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             return;
         }
 
-        var w = d3.select("#parallel-coordinates-box").node().getBoundingClientRect().width;
+        var node: any = d3.select("#parallel-coordinates-box").node();
+        var w = node.getBoundingClientRect().width;
         console.log(d3.select("#parallel-coordinates-box").node())
 
         var margin = {top: 30, right: 10, bottom: 20, left: 10},
@@ -193,7 +202,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
                 return that.isTopicMatch(d) ? "" : "none";
             })
             .style("opacity", function (d) {
-                return d.score["confidence"] * d.score["confidence"];
+                return d.score["confidence"];
             });
         /*
          .style("stroke", function (d) {
@@ -354,13 +363,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             var selected = [];
             foreground.style("display", function (d) {
                 let display = actives.every(function (p) {
-                        var result = false;
-                        if (p.dimension !== "order_id") {
-                            result = p.extent[0] >= d.score[p.dimension] && d.score[p.dimension] >= p.extent[1];
-                        } else {
-                            result = p.extent[0] <= d.score[p.dimension] && d.score[p.dimension] <= p.extent[1];
-                        }
-                        return result;
+                        return that.filter(p, d);
                     }) && that.isTopicMatch(d);
                 if (display) {
                     selected.push(d);
@@ -399,13 +402,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
 
         this.foreground.style("display", function (d) {
             let display = actives.every(function (p) {
-                    var result = false;
-                    if (p.dimension !== "order_id") {
-                        result = p.extent[0] >= d.score[p.dimension] && d.score[p.dimension] >= p.extent[1];
-                    } else {
-                        result = p.extent[0] <= d.score[p.dimension] && d.score[p.dimension] <= p.extent[1];
-                    }
-                    return result;
+                    return that.filter(p, d);
                 }) && that.isTopicMatch(d);
             if (display) {
                 selected.push(d);
@@ -445,17 +442,23 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
 
         this.foreground.style("display", function (d) {
             let display = actives.every(function (p) {
-                    var result = false;
-                    if (p.dimension !== "order_id") {
-                        result = p.extent[0] >= d.score[p.dimension] && d.score[p.dimension] >= p.extent[1];
-                    } else {
-                        result = p.extent[0] <= d.score[p.dimension] && d.score[p.dimension] <= p.extent[1];
-                    }
-                    return result;
+                    return that.filter(p, d);
                 }) && that.isTopicMatch(d) && (topic ? that.isMatch(topic, d) : true);
             return display ? null : 'none';
         });
 
+    }
+
+    filter(metric, sentence) {
+        var result = false;
+        if (metric.dimension !== "order_id") {
+            result = metric.extent[0] >= sentence.score[metric.dimension]
+                && sentence.score[metric.dimension] >= metric.extent[1];
+        } else {
+            result = metric.extent[0] <= sentence.score[metric.dimension]
+                && sentence.score[metric.dimension] <= metric.extent[1];
+        }
+        return result;
     }
 
     isMatch(topic, sentence) {

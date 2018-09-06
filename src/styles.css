@@ -29,12 +29,46 @@ kbd {
     white-space: nowrap;
 }
 
+.number-display {
+    padding-left: 2px;
+    padding-right: 2px;
+    background: #e3e3e3;
+    font-weight: bold;
+}
+
 foreignObject {
     text-align: left;
 }
 
 body {
     margin: 0px;
+}
+
+.mat-input-element:disabled {
+    color: #393939;
+}
+
+.mat-form-field-disabled .mat-form-field-underline {
+    background-position: 0;
+    background-color: #393939 !important;
+}
+
+del {
+    text-decoration: line-through;
+    background-color: #fbb;
+    color: #555;
+}
+
+ins {
+    text-decoration: none;
+    background-color: #d4fcbc;
+}
+
+#tree-vis {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .node circle {
@@ -194,9 +228,9 @@ mat-icon {
     cursor: move;
 }
 
-.selected-line {
+.selected-line  {
     stroke: orange !important;
-    stroke-width: 3px;
+    stroke-width: 3px !important;
     opacity: 1 !important;
 }
 

@@ -17,6 +17,8 @@ import {MatSnackBar} from '@angular/material';
 
 export class SentenceViewComponent implements OnInit, AfterContentInit {
     title = 'DNN Vis';
+    ATTENTION_THRESHOLD = 0.2;
+
     sentence = [];
     translation = [];
     editedTranslation;
@@ -35,8 +37,8 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
     unkMap = {};
     documentUnkMap = {};
     beamSize = 3;
-    beamLength = 0.5;
-    beamCoverage = 0.5;
+    beamLength = 1;
+    beamCoverage = 1;
     sentenceId;
     documentId;
     showAttentionMatrix = false;
@@ -221,10 +223,10 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
     onCurrentAttentionChange() {
         for (var i = 0; i < this.beamAttention.length; i++) {
-            if (this.beamAttention[i] > 0.3) {
+            if (this.beamAttention[i] > this.ATTENTION_THRESHOLD) {
                 d3.select("#source-word-text-" + i).style("font-weight", "bold");
             }
-            let opacity = this.beamAttention[i] < 0.1 ? 0 : Math.max(0.3, this.beamAttention[i]);
+            let opacity = this.beamAttention[i] < 0.1 ? 0 : Math.sqrt(this.beamAttention[i]);
             d3.select("#source-word-box-" + i).style("opacity", opacity);
         }
     }
@@ -258,13 +260,27 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
         for (var j = 0; j < attention[i].length; j++) {
 
-            svg.select("#source-word-box-" + j).style("opacity", attention[i][j]);
+            svg.select("#source-word-box-" + j).style("opacity", Math.sqrt(attention[i][j]));
 
-            if (attention[i][j] > 0.3) {
+            if (attention[i][j] > this.ATTENTION_THRESHOLD) {
                 svg.select("#source-word-text-" + j).style("font-weight", "bold");
             }
 
         }
+    }
+
+    isValidTranslation() {
+        return this.translation.length !== 0 && this.translation[this.translation.length - 1] === 'EOS';
+    }
+
+    lastMaxIndex(a) {
+        var maxI = 0;
+        for (var i = 1; i < a.length; i++) {
+            if (a[i] >= a[maxI]) {
+                maxI = i;
+            }
+        }
+        return maxI;
     }
 
     updateTranslation(source: string, translation: string) {
@@ -293,11 +309,15 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
                 wholeWordCount++;
             }
             for (var j = 0; j < attention[i].length; j++) {
-                if (attention[i][j] > 0.3) {
-                    furthestRelevantSourceIndex = Math.max(furthestRelevantSourceIndex, j);
+                var maxJ = this.lastMaxIndex(attention[i]);
+                if (attention[i][maxJ] > this.ATTENTION_THRESHOLD
+                    && (maxJ !== attention[i].length - 1 || i === this.inputSentence.split(" ").length - 1)) {
+                    furthestRelevantSourceIndex = Math.max(furthestRelevantSourceIndex, maxJ);
                 }
             }
         }
+        console.log(sourceWords.length - 1)
+        console.log(furthestRelevantSourceIndex)
 
         var xSourceValues = {0: 0};
         for (var i = 1; i < sourceWords.length; i++) {
@@ -312,16 +332,18 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
         var w2 = xTargetValues[targetWords.length - 1] + 0.5 * this.calculateTextWidth(targetWords.slice(-1)[0]);
         var relevantW1 = xSourceValues[furthestRelevantSourceIndex] + 0.5 * this.calculateTextWidth(sourceWords[furthestRelevantSourceIndex]);
 
-        if (targetWords.length > 2 && relevantW1 - w2 > 30) {
-            let delta = relevantW1 - w2;
-            targetBarPadding = delta / (wholeWordCount - 1)
-        }
+        if (wholeWordCount > 1 && targetWords.length > 2 && relevantW1 - (w2 + leftMargin) > 0) {
+            let delta = relevantW1 - w2 - leftMargin;
+            if (delta > 0) {
+                targetBarPadding = delta / (wholeWordCount - 1)
 
-        var wholeWordIndex = 0;
-        for (var i = 0; i < targetWords.length; i++) {
-            xTargetValues[i] += wholeWordIndex * targetBarPadding;
-            if (!targetWords[i].endsWith("@@")) {
-                wholeWordIndex++;
+                var wholeWordIndex = 0;
+                for (var i = 0; i < targetWords.length; i++) {
+                    xTargetValues[i] += wholeWordIndex * targetBarPadding;
+                    if (!targetWords[i].endsWith("@@")) {
+                        wholeWordIndex++;
+                    }
+                }
             }
         }
 
@@ -331,7 +353,10 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
             width = w - margin.left - margin.right,
             height = 100 - margin.top - margin.bottom;
 
-        var attentionScale = d3.scaleLinear().domain([0, 1]).range([0, 5]);
+        var attentionScale = d3.scalePow().domain([0, 1]).range([0, 5]);
+        attentionScale = function (x) {
+            return 5 * Math.sqrt(x);
+        }
 
         // append the svg object to the body of the page
         // appends a 'group' element to 'svg'
@@ -382,9 +407,9 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
                 that.addEvent("source-hover", d);
                 for (var j = 0; j < attention.length; j++) {
 
-                    svg.select("#target-word-box-" + j).style("opacity", attention[j][i]);
+                    svg.select("#target-word-box-" + j).style("opacity", Math.sqrt(attention[j][i]));
 
-                    if (attention[j][i] > 0.3) {
+                    if (attention[j][i] > that.ATTENTION_THRESHOLD) {
                         svg.select("#target-word-text-" + j).style("font-weight", "bold");
                     }
 
@@ -442,9 +467,9 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
                 for (var j = 0; j < attention[i].length; j++) {
 
-                    svg.select("#source-word-box-" + j).style("opacity", attention[i][j]);
+                    svg.select("#source-word-box-" + j).style("opacity", Math.sqrt(attention[i][j]));
 
-                    if (attention[i][j] > 0.3) {
+                    if (attention[i][j] > that.ATTENTION_THRESHOLD) {
                         svg.select("#source-word-text-" + j).style("font-weight", "bold");
                     }
 
@@ -526,7 +551,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
                 return attentionScale(d) + "px";
             })
             .attr("visibility", function (d, i) {
-                return d < 0.3 ? "hidden" : "visible";
+                return d < that.ATTENTION_THRESHOLD ? "hidden" : "visible";
             });
     }
 
@@ -552,10 +577,11 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
         }
     }
 
+    onSkip() {
+        this.router.navigate(['/documents', this.documentId, "sentence", this.sentenceId]);
+    }
+
     onAcceptTranslation() {
-
-        console.log("Edited: " + this.editedTranslation);
-
         this.http.post('http://46.101.224.19:5000/api/correctTranslation', {
             translation: this.translation.join(" "),
             beam: this.beam,
@@ -619,6 +645,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
     }
 
     showInfo() {
+        console.log("Showing Info")
         this.dialog.open(InfoDialog, {
             width: "600px"
         });

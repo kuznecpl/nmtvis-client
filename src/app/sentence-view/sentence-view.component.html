@@ -21,23 +21,41 @@
 
     <mat-sidenav-content>
         <form class="translation-form">
-            <mat-form-field class="example-full-width" style="width: 88%;">
-                <textarea name="first" style="font-size: 13px;" rows="1" [(ngModel)]="inputSentence" matInput
+            <mat-form-field [color]="'warn'" class="example-full-width" style="width: 82%;">
+                <textarea disabled name="first" style="font-size: 13px;" rows="1" [(ngModel)]="inputSentence" matInput
                           placeholder="Source Sentence" value=""></textarea>
             </mat-form-field>
+            <button type="button"
+                    [style.background-color]="'#f44336'"
+                    style="width: 90px;"
+                    (click)="onSkip()"
+                    mat-raised-button
+                    color="primary">
+                Return
+                <mat-icon style="font-size:16px; vertical-align: sub">keyboard_return
+                </mat-icon>
+            </button>
         </form>
 
         <form class="translation-form">
             <mat-form-field class="example-full-width" style="width: 82%;">
-                <textarea name="translation" style="font-size: 14px;font-weight: bold;" rows="1" [ngModel]="translation.join(' ') | textDisplay: translation.join(' ').endsWith('EOS') " matInput
+                <textarea name="translation" style="font-size: 14px;font-weight: bold;" rows="1"
+                          [ngModel]="translation.join(' ') | textDisplay: translation.join(' ').endsWith('EOS') "
+                          matInput
                           (ngModelChange)="onTranslationEdit($event)"
                           placeholder="Translation" value=""></textarea>
             </mat-form-field>
-            <button style="background-color: green;" type="button"
+            <button type="button"
+                    [style.background-color]="isValidTranslation() ? 'green' : 'lightgray'"
+                    [style.color]="'white'"
+                    style="width: 90px;"
                     (click)="onAcceptTranslation()"
+                    [disabled]="!isValidTranslation()"
                     mat-raised-button
                     color="primary">
                 Accept
+                <mat-icon style="font-size:16px; vertical-align: sub">done
+                </mat-icon>
             </button>
             <button style="min-width: 100px;display:none" type="button" (click)="onClick()" mat-raised-button
                     color="primary">
@@ -87,7 +105,8 @@
         </div>
 
         <div>
-            <div *ngIf="false" style="height: 420px; overflow-y: auto; margin-right: 10px;margin-top: 20px;display: inline-block;padding-right: 20px;vertical-align: top;float: left; margin-left: 100px;">
+            <div *ngIf="false"
+                 style="height: 420px; overflow-y: auto; margin-right: 10px;margin-top: 20px;display: inline-block;padding-right: 20px;vertical-align: top;float: left; margin-left: 100px;">
                 <span style="font-weight: bold;">Attention View</span>
 
                 <div style="text-align: left;font-size: 12px; max-height: 25px;"
@@ -106,8 +125,9 @@
                         <span style="font-weight: bold;margin-right: 0px;">Beam Search View</span>
                         <button style="margin-right: 20px" type="button"
                                 mat-icon-button
-                                title="Mark translation as corrected">
-                            <mat-icon (click)="showInfo()">info
+                                (click)="showInfo()"
+                                title="Information">
+                            <mat-icon>info
                             </mat-icon>
                         </button>
                         <span style="font-weight: bold">Number of translations:</span>
@@ -142,17 +162,20 @@
                         </mat-form-field>
                     </form>
                 </div>
+                <svg id="tree-vis">
+                </svg>
                 <div class="zoom-buttons">
-                    <button id="zoom-in" style="margin-top: 50px" type="button"
+
+                    <button id="zoom-in" style="margin-top: 0px" type="button"
                             mat-icon-button
-                            title="Mark translation as corrected">
+                            title="Zoom In">
                         <mat-icon>zoom_in
                         </mat-icon>
 
                     </button>
-                    <button id="zoom-out" style="margin-top: 50px" type="button"
+                    <button id="zoom-out" style="margin-top: 0px" type="button"
                             mat-icon-button
-                            title="Mark translation as corrected">
+                            title="Zoom Out">
                         <mat-icon>zoom_out
                         </mat-icon>
 
