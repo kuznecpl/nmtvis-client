@@ -1,6 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {ExperimentService} from '../services/experiment.service';
+import * as Survey from 'survey-angular';
 
 @Component({
     selector: 'app-start-experiment',
@@ -142,8 +143,7 @@ export class StartExperimentComponent implements OnInit {
                                 minRateDescription: "strongly disagree ",
                                 maxRateDescription: "strongly agree"
                             }
-                        ],
-                        title: "Functionality"
+                        ]
                     }
                 ]
             },
@@ -303,8 +303,7 @@ export class StartExperimentComponent implements OnInit {
                                 name: "general-comments",
                                 title: "Do you have any other feedback or comments?"
                             }
-                        ],
-                        title: "Free Form"
+                        ]
                     }
                 ]
             }
@@ -371,7 +370,7 @@ export class StartExperimentComponent implements OnInit {
         });
         this.survey.onComplete.add(result => {
             this.experimentService.sendSurveyData(result.data)
-                .subscribe(result => {
+                .subscribe((result: any) => {
                     this.showSubmitButton = true;
                     this.documentId = result.documentId;
                     this.sentenceId = result.sentenceId;

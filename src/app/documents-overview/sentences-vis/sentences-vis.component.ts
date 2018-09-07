@@ -1,4 +1,4 @@
-import {Component, OnInit, OnChanges, AfterViewInit, Input, Output, EventEmitter} from '@angular/core';
+import {Component, OnInit, OnChanges, AfterViewInit, SimpleChange, SimpleChanges, Input, Output, EventEmitter} from '@angular/core';
 import * as d3 from 'd3';
 
 @Component({
@@ -9,7 +9,7 @@ import * as d3 from 'd3';
 export class SentencesVisComponent implements OnInit, OnChanges, AfterViewInit {
 
     @Input()
-    private selectedSentence = "";
+    private selectedSentence;
     @Output()
     private selectedSentenceChange = new EventEmitter<string>();
     @Input()
@@ -119,7 +119,7 @@ export class SentencesVisComponent implements OnInit, OnChanges, AfterViewInit {
             .range([height - 5, 0]);
 
         // Scale the range of the data in the domains
-        x.domain(data.map(function (d, i) {
+        x.domain(data.map(function (d: any, i: any) {
             return i;
         }));
         y.domain([d3.min(data, function (d) {
@@ -134,7 +134,7 @@ export class SentencesVisComponent implements OnInit, OnChanges, AfterViewInit {
             .enter();
 
         barEnter.append("rect")
-            .attr("x", function (d, i) {
+            .attr("x", function (d: any, i: any) {
                 return x(i);
             })
             .attr("class", "background-sentence-bar")
@@ -162,7 +162,7 @@ export class SentencesVisComponent implements OnInit, OnChanges, AfterViewInit {
 
         barEnter.append("rect")
             .attr("class", "sentence-bar")
-            .attr("x", function (d, i) {
+            .attr("x", function (d: any, i: any) {
                 return x(i);
             })
             .attr("width", x.bandwidth())

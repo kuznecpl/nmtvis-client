@@ -15,10 +15,8 @@ export class FinishComponent implements OnInit {
 
     constructor(private experimentService: ExperimentService) {
         experimentService.getExperimentData()
-            .subscribe(result => {
-                console.log(result)
+            .subscribe((result: any) => {
                 this.survey = this.parseResults(result.survey);
-                console.log(this.survey);
             })
     }
 

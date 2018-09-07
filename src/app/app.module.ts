@@ -36,7 +36,6 @@ import {ExperimentService} from './services/experiment.service';
 import {TokenInterceptor} from './auth/token-interceptor';
 import {JwtInterceptor} from './auth/jwt-interceptor';
 import {RegisterComponent} from './register/register.component';
-import {PlainSentenceViewComponent} from './plain-sentence-view/plain-sentence-view.component';
 import {TextDisplayPipe} from './pipes/text-display.pipe';
 import {StartExperimentComponent} from './start-experiment/start-experiment.component';
 import {FinishComponent} from './finish/finish.component';
@@ -66,11 +65,6 @@ const appRoutes: Routes = [
         component: SentenceViewComponent,
         canActivate: [EnsureAuthenticated]
     },
-    {
-        path: 'plain/document/:document_id/sentence/:sentence_id',
-        component: PlainSentenceViewComponent,
-        canActivate: [EnsureAuthenticated]
-    },
 ];
 
 @NgModule({
@@ -78,7 +72,7 @@ const appRoutes: Routes = [
         AppComponent,
         DocumentsOverviewComponent, LoginComponent, InfoDialog,
         SentenceViewComponent, BeamNodeDialog, SentencesVisComponent,
-        DocumentUploadDialog, RegisterComponent, PlainSentenceViewComponent,
+        DocumentUploadDialog, RegisterComponent,
         TextDisplayPipe, StartExperimentComponent, FinishComponent,
         ParallelCoordinatesComponent, SentenceListItemComponent, IntroComponent
     ],

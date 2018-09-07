@@ -3,6 +3,7 @@ import {Document} from '../models/document';
 import {DocumentService} from '../services/document.service';
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
 import {ActivatedRoute} from '@angular/router';
+import {Constants} from '../constants';
 import {TextDisplayPipe} from '../pipes/text-display.pipe';
 import * as d3 from 'd3';
 
@@ -24,6 +25,7 @@ export class DocumentsOverviewComponent implements OnInit, AfterViewInit {
     retranslateText = "Retranslate";
     retraining = false;
     retranslating = false;
+    IS_USER_STUDY = Constants.IS_USER_STUDY;
 
     numChanges = 0;
     metrics = [
@@ -418,10 +420,11 @@ export class DocumentsOverviewComponent implements OnInit, AfterViewInit {
         this.loadTopics();
         this.loadDefaultBrush();
         //let result = this.loadCachedSentences();
-        this.loading = false;
+        this.loading = true;
 
         this.documentService.getSentences(document.id)
             .subscribe(sentences => {
+                this.loading = false;
                 this.selectedDocument.sentences = sentences;
                 this.computeTopicOccurrences();
                 this.allSentences = sentences;
@@ -450,7 +453,7 @@ export class DocumentsOverviewComponent implements OnInit, AfterViewInit {
         this.retranslateText = "Translating...";
         this.retranslating = true;
         this.documentService.retranslate(this.selectedDocument.id)
-            .subscribe(res => {
+            .subscribe((res: any) => {
                 this.onClick(this.selectedDocument);
                 this.retranslateText = "Retranslate";
                 this.numChanges = res.numChanges;

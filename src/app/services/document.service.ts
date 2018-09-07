@@ -3,9 +3,7 @@ import {Document, Sentence} from '../models/document';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Observable} from 'rxjs';
 
-@Injectable({
-    providedIn: 'root',
-})
+@Injectable()
 export class DocumentService {
 
     private documents: Document[] = [new Document("1", "Dokument 1", "Das ist der Inhalt.ich bin nett."),
@@ -17,7 +15,7 @@ export class DocumentService {
 
 
     getSentences(document_id): Observable<Sentence[]> {
-        return this.http.get<Document[]>(this.documentsUrl + "/" + document_id + "/sentences");
+        return this.http.get<Sentence[]>(this.documentsUrl + "/" + document_id + "/sentences");
     }
 
     getDocuments(): Observable<Document[]> {
@@ -26,7 +24,7 @@ export class DocumentService {
 
     getSentence(document_id, sentence_id): Observable<Sentence> {
 
-        return this.http.get<Document>(this.documentsUrl + "/" + document_id + "/sentences/" + sentence_id);
+        return this.http.get<Sentence>(this.documentsUrl + "/" + document_id + "/sentences/" + sentence_id);
     }
 
     setCorrected(document_id: string, sentence_id: string, corrected: boolean) {
@@ -40,10 +38,10 @@ export class DocumentService {
     }
 
     retrain(document_id: string) {
-        return this.http.post(this.documentsUrl + "/" + document_id + "/retrain");
+        return this.http.post(this.documentsUrl + "/" + document_id + "/retrain", {});
     }
 
     retranslate(document_id: string) {
-        return this.http.post(this.documentsUrl + "/" + document_id + "/translate");
+        return this.http.post(this.documentsUrl + "/" + document_id + "/translate", {});
     }
 }

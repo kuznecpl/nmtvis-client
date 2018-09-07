@@ -23,12 +23,15 @@
     "@angular/platform-browser": "^5.2.11",
     "@angular/platform-browser-dynamic": "^5.2.11",
     "@angular/router": "^5.2.11",
-    "angular-material-fileupload": "^0.0.11",
+    "@types/json5": "0.0.30",
+    "@types/knockout": "^3.4.58",
+    "angular-material-fileupload": "0.0.11",
     "core-js": "^2.5.7",
     "d3": "^5.5.0",
     "material-design-icons": "^3.0.1",
     "rxjs": "^5.5.11",
-    "survey-angular": "^1.0.35",
+    "survey-angular": "^1.0.42",
+    "surveyjs-editor": "^1.0.42",
     "zone.js": "^0.8.19"
   },
   "devDependencies": {

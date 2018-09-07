@@ -22,12 +22,14 @@
            [id]="'translation-sentence-' + sentence.id"
            [routerLink]="['/document', selectedDocument.id, 'sentence', sentence.id]">
 
-            <span class="target-word"
-                  *ngFor="let word of textPipe.transform(sentence.translation, true).split(' ');let j = index;"
-                  ya
-                  [style.background-color]="isHighlightedTarget(sentence, word, j) ? '#ffa50091' : none">
-                {{word}}
-            </span>
+            <div *ngIf="sentence.diff.length == 0">
+                <span class="target-word"
+                      *ngFor="let word of textPipe.transform(sentence.translation, true).split(' ');let j = index;"
+                      ya
+                      [style.background-color]="isHighlightedTarget(sentence, word, j) ? '#ffa50091' : none">
+                    {{word}}
+                </span>
+            </div>
             <div innerHTML="{{ sentence.diff }}"></div>
         </a>
     </span>

@@ -1,28 +1,14 @@
 <mat-sidenav-container xmlns:display="http://www.w3.org/1999/xhtml">
-    <mat-sidenav #sidenav mode="over" [(opened)]="sideOpened" style="width: 400px;">
-        <div *ngFor="let sentence of documentSentences">
-            <button style="" type="button"
-                    mat-icon-button
-                    title="Mark translation as corrected">
-                <mat-icon [ngStyle]="{'color': sentence.corrected ? 'green' : 'lightgray'}">check_circle
-                </mat-icon>
-            </button>
-            <div style="display: inline-block; width: 70%; vertical-align: middle;" class="side-sentence">
-                <a style="text-decoration: none; color: black; vertical-align: middle;"
-                   [id]="'sentence-' + sentence.id"
-                   (click)="sideOpened=false"
-                   [routerLink]="['/document', this.documentId, 'sentence', sentence.id]">
-                    {{sentence.source}}
-                </a>
-            </div>
-            <mat-divider></mat-divider>
-        </div>
+    <mat-sidenav>
     </mat-sidenav>
 
     <mat-sidenav-content>
         <form class="translation-form">
             <mat-form-field [color]="'warn'" class="example-full-width" style="width: 82%;">
-                <textarea disabled name="first" style="font-size: 13px;" rows="1" [(ngModel)]="inputSentence" matInput
+                <textarea disabled name="first" style="font-size: 13px;" rows="1"
+                          [(ngModel)]="inputSentence" matInput
+                          matTextareaAutosize
+                          [matAutosizeMaxRows]="2"
                           placeholder="Source Sentence" value=""></textarea>
             </mat-form-field>
             <button type="button"
@@ -40,8 +26,10 @@
         <form class="translation-form">
             <mat-form-field class="example-full-width" style="width: 82%;">
                 <textarea name="translation" style="font-size: 14px;font-weight: bold;" rows="1"
-                          [ngModel]="translation.join(' ') | textDisplay: translation.join(' ').endsWith('EOS') "
+                          [ngModel]="translation.join(' ') | textDisplay: translation.join(' ').endsWith('<EOS>') "
                           matInput
+                          [matAutosizeMaxRows]="2"
+                          matTextareaAutosize
                           (ngModelChange)="onTranslationEdit($event)"
                           placeholder="Translation" value=""></textarea>
             </mat-form-field>
@@ -115,7 +103,7 @@
                             style="display: inline-block; width: 70px; font-weight: bold;text-overflow: ellipsis;overflow: hidden">
                         {{ word }}
                     </div>
-                    <mat-slider min="0" max="1" step="0.01" (change)="attentionChange($event, i)"
+                    <mat-slider min="0" max="1" step="0.01"
                                 [(ngModel)]="beamAttention[i]"></mat-slider>
                 </div>
             </div>

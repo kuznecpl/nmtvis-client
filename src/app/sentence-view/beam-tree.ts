@@ -1,5 +1,6 @@
 import * as d3 from 'd3';
-//import {BeamNodeDialog} from './sentence-view.component';
+import {Constants} from '../constants';
+import {BeamNode} from './beam-node';
 
 export class BeamTree {
 
@@ -81,9 +82,10 @@ export class BeamTree {
 
         this.colors = ['#fee8c8', '#fdd49e', '#fdbb84', '#fc8d59', '#ef6548', '#d7301f'];
         var domain = [];
-        for (var i = -3.0; i <= 0; i += 3.0 / (this.colors.length - 1)) {
+        for (var i = -2.0; i <= 0; i += 3.0 / (colors.length - 1)) {
             domain.push(i);
         }
+        domain = [-3, -2, -0.5, -0.05, -0.005, -0.0005];
         this.colorScale = d3.scaleLinear().domain(domain).range(this.colors).clamp(true);
         this.buildColorLegend();
 
@@ -100,7 +102,7 @@ export class BeamTree {
         //root.children.forEach(collapse);
 
         this.update(this.root);
-        this.center(this.root);
+        this.center(this.root, "");
     }
 
     updateData(treeData) {
@@ -280,6 +282,13 @@ export class BeamTree {
                 return "middle";
             })
             .text(function (d) {
+                if (d.data.name === Constants.EOS) {
+                    return "EOS";
+                }
+                if (d.data.name === Constants.SOS) {
+                    return "SOS";
+                }
+
                 var logprob = d.data.logprob ? d.data.logprob.toString() : "";
 
                 var path = beamTree.getPath(d);
@@ -448,8 +457,8 @@ export class BeamTree {
         var tree = this;
         this.that.addEvent("node-click", this.getPath(d) + " " + d.data.name);
 
-        if (d.data.name === "EOS" && !d.data.isCandidate) {
-            this.center(d);
+        if (d.data.name === Constants.EOS && !d.data.isCandidate) {
+            this.center(d, "");
 
             let eos = this.getNodeSelection(d);
             eos.select("circle")
@@ -737,7 +746,7 @@ export class BeamTree {
 
     mouseover(d, el) {
         this.onMouseover(d, el);
-        this.center(d);
+        this.center(d, "");
         d3.selectAll('.focus-path').classed("focus-path", false);
         this.visitAncestors(d, node => {
             this.getNodeSelection(node).classed("focus-path", true);
@@ -880,7 +889,7 @@ export class BeamTree {
         }
 
         var key = d3.event.key;
-        if (this.focusNode.data.name !== "EOS" && key.length === 1 && !(key == " " && this.currentInput.length === 0)) {
+        if (this.focusNode.data.name !== Constants.EOS && key.length === 1 && !(key == " " && this.currentInput.length === 0)) {
             this.currentInput += key;
 
             var node = this.getBeamNode(this.treeData, this.getPathList(this.focusNode).slice(1));
@@ -910,7 +919,7 @@ export class BeamTree {
             var node = this.getBeamNode(this.treeData, this.getPathList(this.focusNode).slice(1));
             this.removeEditChild(node);
             this.updateData(this.treeData);
-            this.center(this.focusNode)
+            this.center(this.focusNode, "")
         }
         this.updateData(this.treeData);
 
@@ -1005,7 +1014,7 @@ export class BeamTree {
     getBeamAttention(d) {
         var attention = [];
 
-        while (d && d.data.name !== 'SOS') {
+        while (d && d.data.name !== Constants.SOS) {
             attention.push(d.data.attn[0]);
             d = d.parent;
         }
@@ -1059,7 +1068,7 @@ export class BeamTree {
         beam.is_golden = true
         for (var i = 0; i < beam.children.length; i++) {
             if (beam.children[i].name === hypothesis[0]) {
-                this.setGoldenHypothesis(beam.children[i], hypothesis.slice(1))
+                this.setGoldenHypothesis(beam.children[i])
             }
         }
 

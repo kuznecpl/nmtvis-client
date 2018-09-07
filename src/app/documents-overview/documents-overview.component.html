@@ -3,6 +3,8 @@
         <mat-list>
             <form class="translation-form" style="padding-bottom: 10px; padding-left: 5px; padding-right: 5px;">
                 <button style="width: 100%;" type="button" (click)="uploadClick()" mat-raised-button
+                        [disabled]="IS_USER_STUDY"
+                        title="This action is disabled for the user study"
                         color="accent">Upload
                     Document
                 </button>
@@ -41,10 +43,11 @@
                             <mat-card-content style="height: 80%;">
                                 <div style="overflow-y: scroll;text-align: start;height: 90%;">
                                     <div *ngFor="let topic of topics">
-                                        <div *ngIf="topic.occurrences > 0">
+                                        <div>
                                             <div class="topic" style="padding:2px;" (mouseenter)="hoverTopic=topic"
                                                  (mouseleave)="hoverTopic = null">
                                                 <mat-checkbox style="display:inline" [name]="topic.name"
+                                                              [disabled]="topic.occurrences == 0"
                                                               [(ngModel)]="topic.active"
                                                               (change)="onActiveTopicChange()">
                                                     {{topic.name}} <span
@@ -119,7 +122,7 @@
                 </mat-card-content>
 
                 <div style="">
-                    <span *ngIf="selectedDocument" style="display: inline-block; float:left;">
+                    <span *ngIf="selectedDocument && selectedDocument.sentences" style="display: inline-block; float:left;">
                         Corrected <span class="number-display">{{ correctedSentences }}</span> of <span
                             class="number-display">{{ selectedDocument.sentences.length}}</span>
                         ({{ (correctedSentences / selectedDocument.sentences.length) | percent}})
@@ -138,13 +141,18 @@
                     </form>
 
                     <button type="button" style="float: right;" (click)="onRetrainClick()" mat-raised-button
+                            [disabled]="IS_USER_STUDY"
+                            title="This action is disabled for the user study"
                             color="primary">{{ retrainText }}
                         <mat-icon style="font-size:16px; vertical-align: sub">repeat
                         </mat-icon>
                     </button>
                     <button type="button" style="float: right;margin-right: 10px;" (click)="onRetranslateClick()"
                             mat-raised-button
+                            title="This action is disabled for the user study"
+                            [disabled]="IS_USER_STUDY"
                             color="primary">{{ retranslateText }}
+
                         <mat-icon style="font-size:16px; vertical-align: sub">repeat
                         </mat-icon>
                     </button>

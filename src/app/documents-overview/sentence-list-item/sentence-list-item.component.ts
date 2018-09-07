@@ -1,4 +1,4 @@
-import {Component, OnInit, AfterViewInit, Input, Output, OnChanges, EventEmitter} from '@angular/core'
+import {Component, OnInit, AfterViewInit, Input, Output, OnChanges, SimpleChanges, SimpleChange, EventEmitter} from '@angular/core'
 import {TextDisplayPipe} from '../../pipes/text-display.pipe';
 import {DocumentService} from '../../services/document.service';
 import {Router}                 from '@angular/router';
@@ -41,7 +41,7 @@ export class SentenceListItemComponent implements OnInit, OnChanges {
     buildMappings() {
         let sentence = this.sentence;
         let bpe_target = sentence.translation.slice(0, -4).split(" ");
-        let source = this.textPipe.transform(sentence.source).split(" ");
+        let source = this.textPipe.transform(sentence.source, false).split(" ");
         let target = this.textPipe.transform(sentence.translation, true).split(" ");
         let bpe_source = sentence.source.split(" ");
         let attention = sentence.attention;
@@ -112,7 +112,7 @@ export class SentenceListItemComponent implements OnInit, OnChanges {
 
     isHighlightedTarget(sentence, word, target_index) {
         let bpe_target = sentence.translation.slice(0, -4).split(" ");
-        let source = this.textPipe.transform(sentence.source).split(" ");
+        let source = this.textPipe.transform(sentence.source, false).split(" ");
         let target = this.textPipe.transform(sentence.translation, true).split(" ");
         let bpe_source = sentence.source.split(" ");
         let attention = sentence.attention;

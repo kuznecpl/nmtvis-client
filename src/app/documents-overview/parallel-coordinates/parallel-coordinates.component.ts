@@ -141,7 +141,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             dragging = {};
 
         var line = d3.line(),
-            axis = d3.axisLeft();
+            axis = d3.axisLeft(null);
 
         var that = this;
 
@@ -151,7 +151,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
         // Extract the list of dimensions and create a scale for each.
         dimensions = metrics // d3.keys(sentences[0].score)
             .filter(function (d) {
-                var extent = d3.extent(sentences, function (p) {
+                var extent = d3.extent(sentences, function (p: any) {
                     return +p.score[d];
                 });
                 if (d === "order_id") {
@@ -172,7 +172,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
         // Add grey background lines for context.
         var background = svg.append("g")
             .attr("class", "background").selectAll("path")
-            .data(sentences, function (d) {
+            .data(sentences, function (d: any) {
                 return d.id;
             })
             .enter()
@@ -183,18 +183,19 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
         // Add blue foreground lines for focus.
         var foreground = svg.append("g")
             .attr("class", "foreground").selectAll("path")
-            .data(sentences, function (d) {
+            .data(sentences, function (d: any) {
                 return d.id;
             })
             .enter()
             .append("path")
             .attr("d", path)
-            .attr("id", function (d) {
+            .attr("id", function (d: any) {
                 return "line-" + d.id;
             })
-            .on("mouseover", function (d) {
+            .on("mouseover", function (d: any) {
                 d3.select('.selected-line').classed('selected-line', false);
-                d3.select('#line-' + d.id).classed("selected-line", true).moveToFront();
+                var l: any = d3.select('#line-' + d.id).classed("selected-line", true);
+                    l.moveToFront();
                 that.onSentenceSelection.emit(d.id);
                 that.selectedSentenceChange.emit(d);
             })
@@ -213,8 +214,8 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
         //var foregroundUpdate = foregroundEnter.merge(foreground);
 
         // Add a group element for each dimension.
-        var g = svg.selectAll(".dimension")
-            .data(dimensions, function (d) {
+        var g: any = svg.selectAll(".dimension")
+            .data(dimensions, function (d: any) {
                 return d;
             })
             .enter().append("g")
@@ -223,25 +224,25 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
                 return "translate(" + x(d) + ")";
             })
             .call(d3.drag()
-                .subject(function (d) {
+                .subject(function (d: any) {
                     return {x: x(d)};
                 })
-                .on("start", function (d) {
+                .on("start", function (d: any) {
                     dragging[d] = x(d);
                     background.attr("visibility", "hidden");
                 })
-                .on("drag", function (d) {
+                .on("drag", function (d: any) {
                     dragging[d] = Math.min(width, Math.max(0, d3.event.x));
                     foreground.attr("d", path);
                     dimensions.sort(function (a, b) {
                         return position(a) - position(b);
                     });
                     x.domain(dimensions);
-                    g.attr("transform", function (d) {
+                    g.attr("transform", function (d: any) {
                         return "translate(" + position(d) + ")";
                     })
                 })
-                .on("end", function (d) {
+                .on("end", function (d: any) {
                     delete dragging[d];
                     transition(d3.select(this)).attr("transform", "translate(" + x(d) + ")");
                     transition(foreground).attr("d", path);
@@ -256,7 +257,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
         // Add an axis and title.
         var axisGroup = g.append("g")
             .attr("class", "axis")
-            .each(function (d) {
+            .each(function (d: any) {
                 d3.select(this).call(axis.scale(y[d]).ticks(5));
             });
         axisGroup.append("text")
@@ -265,7 +266,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             .attr("y", -9)
             .style("font-size", "12px")
             .classed("title", true)
-            .text(function (d) {
+            .text(function (d: any) {
                 return that.metricDisplayName[d];
             })
         this.axisGroup = axisGroup;
@@ -276,7 +277,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             .append("g")
             .attr("transform", "translate(-7, 175)");
         var sortIcon = this.createSortIcon(sortGroup, true);
-        sortIcon.on("click", function (d) {
+        sortIcon.on("click", function (d: any) {
             if (d3.select(this).classed("active-sort-icon")) {
                 sortDirectionMap[d] = !sortDirectionMap[d];
             }
@@ -284,7 +285,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             d3.select(".active-sort-icon").classed("active-sort-icon", false);
             d3.select(this).classed("active-sort-icon", true);
             that.switchSortIcon(d3.select(this), sortDirectionMap[d]);
-        }).each(function (d) {
+        }).each(function (d: any) {
             if (d === that.defaultSortMetric) {
                 sortDirectionMap[d] = that.defaultSortAscending;
                 that.onSortMetric.emit([d, sortDirectionMap[d]]);
@@ -298,7 +299,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
         // Add and store a brush for each axis.
         axisGroup.append("g")
             .attr("class", "brush")
-            .each(function (d) {
+            .each(function (d: any) {
                 d3.select(this).call(y[d].brush = d3.brushY()
                     .extent([[-7, y[d].range()[1]], [7, y[d].range()[0]]])
                     .on("start", brushstart)
@@ -309,7 +310,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             .attr("x", -8)
             .attr("width", 16);
 
-        function extent(brush, d) {
+        function extent(brush, d: any) {
             if (brush !== "order_id") {
                 return brush.extent([[-7, y[d].range()[1]], [7, y[d].range()[0]]]);
             } else {
@@ -318,7 +319,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
 
         }
 
-        function position(d) {
+        function position(d: any) {
             var v = dragging[d];
             return v == null ? x(d) : v;
         }
@@ -328,10 +329,9 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
         }
 
         // Returns the path for a given data point.
-        function path(d) {
+        function path(d: any) {
             return line(dimensions.map(function (p) {
                 return [position(p), y[p](d.score[p])];
-                return [position(p), y[p](d.scored[p])];
             }));
         }
 
@@ -346,12 +346,15 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             var actives = [];
             var brushMap = {};
             svg.selectAll(".brush")
-                .filter(function (d) {
-                    return d3.brushSelection(this);
+                .filter(function (d: any) {
+                    var input: any = this;
+                    var res: any = d3.brushSelection(input);
+                    return res;
                 })
-                .each(function (d) {
-                    var extent = d3.brushSelection(this);
-                    var extent = [y[d].invert(extent[0]), y[d].invert(extent[1])];
+                .each(function (d: any) {
+                    var input: any = this;
+                    var extent: any = d3.brushSelection(input);
+                    extent = [y[d].invert(extent[0]), y[d].invert(extent[1])];
                     actives.push({
                         dimension: d,
                         extent: extent,
@@ -361,7 +364,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             that.onBrushExtentChange.emit(brushMap);
 
             var selected = [];
-            foreground.style("display", function (d) {
+            foreground.style("display", function (d: any) {
                 let display = actives.every(function (p) {
                         return that.filter(p, d);
                     }) && that.isTopicMatch(d);
@@ -370,7 +373,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
                 }
                 return display ? null : 'none';
             });
-            background.style("display", function (d) {
+            background.style("display", function (d: any) {
                 let display = that.isTopicMatch(d);
                 return display ? null : 'none';
             });
@@ -386,12 +389,12 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             return;
         }
         this.svg.selectAll(".brush")
-            .filter(function (d) {
+            .filter(function (d: any) {
                 return d3.brushSelection(this);
             })
-            .each(function (d) {
+            .each(function (d: any) {
                 var extent = d3.brushSelection(this);
-                var extent = [that.y[d].invert(extent[0]), that.y[d].invert(extent[1])];
+                extent = [that.y[d].invert(extent[0]), that.y[d].invert(extent[1])];
                 actives.push({
                     dimension: d,
                     extent: extent,
@@ -400,8 +403,8 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
 
         var selected = [];
 
-        this.foreground.style("display", function (d) {
-            let display = actives.every(function (p) {
+        this.foreground.style("display", function (d: any) {
+            let display = actives.every(function (p: any) {
                     return that.filter(p, d);
                 }) && that.isTopicMatch(d);
             if (display) {
@@ -409,7 +412,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             }
             return display ? null : 'none';
         });
-        this.background.style("display", function (d) {
+        this.background.style("display", function (d: any) {
             let display = that.isTopicMatch(d);
             return display ? null : 'none';
         });
@@ -426,11 +429,11 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
             return;
         }
         this.svg.selectAll(".brush")
-            .filter(function (d) {
+            .filter(function (d: any) {
                 return d3.brushSelection(this);
             })
-            .each(function (d) {
-                var extent = d3.brushSelection(this);
+            .each(function (d: any) {
+                //var extent = d3.brushSelection(this);
                 var extent = [that.y[d].invert(extent[0]), that.y[d].invert(extent[1])];
                 actives.push({
                     dimension: d,
@@ -440,7 +443,7 @@ export class ParallelCoordinatesComponent implements OnInit, AfterViewInit, OnCh
 
         var selected = [];
 
-        this.foreground.style("display", function (d) {
+        this.foreground.style("display", function (d: any) {
             let display = actives.every(function (p) {
                     return that.filter(p, d);
                 }) && that.isTopicMatch(d) && (topic ? that.isMatch(topic, d) : true);

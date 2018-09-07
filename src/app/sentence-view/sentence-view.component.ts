@@ -8,6 +8,7 @@ import {BeamTree} from './beam-tree';
 import {DocumentService} from '../services/document.service';
 import {ExperimentService} from '../services/experiment.service';
 import {MatSnackBar} from '@angular/material';
+import {Constants} from '../constants';
 
 @Component({
     selector: 'app-sentence-view',
@@ -51,7 +52,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
     interval;
 
-    experimentMetrics = {
+    experimentMetrics: any = {
         timeSpent: 0,
         clicks: 0,
         hovers: 0,
@@ -75,23 +76,23 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
             };
             this.events = [];
 
+            var that = this;
             this.documentService.getSentence(this.documentId, this.sentenceId)
-                .subscribe(sentence
-                    => {
-                    this.sentence = sentence.inputSentence.split(" ");
-                    this.inputSentence = this.decodeText(sentence.inputSentence);
+                .subscribe((sentence: any) => {
+                    that.sentence = sentence.inputSentence.split(" ");
+                    that.inputSentence = that.decodeText(sentence.inputSentence);
 
-                    this.translation = sentence.translation.split(" ");
-                    this.attention = sentence.attention;
-                    this.documentUnkMap = sentence.document_unk_map;
-                    this.updateTranslation(sentence.inputSentence, sentence.translation);
-                    this.updateAttentionMatrix();
-                    this.updateBeamGraph(sentence.beam);
+                    that.translation = sentence.translation.split(" ");
+                    that.attention = sentence.attention;
+                    that.documentUnkMap = sentence.document_unk_map;
+                    that.updateTranslation(sentence.inputSentence, sentence.translation);
+                    that.updateAttentionMatrix();
+                    that.updateBeamGraph(sentence.beam);
                 });
-            this.documentService.getSentences(this.documentId)
-                .subscribe(sentences => {
-                    this.documentSentences = sentences;
-                });
+            /*this.documentService.getSentences(this.documentId)
+             .subscribe((sentences: any) => {
+             that.documentSentences = sentences;
+             });*/
         });
     }
 
@@ -173,12 +174,13 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
         svg.append("text").attr("x", -15).attr("y", -50).text("Attention Matrix").style("font-weight", "bold");
 
-        var colorScale = d3.scaleLinear().domain([0, 1]).range(["lightgray", "#ff5010"]);
+        var range: any = ["lightgray", "#ff5010"];
+        var colorScale: any = d3.scaleLinear().domain([0, 1]).range(range);
 
         var sourceWords = this.inputSentence.split(" ");
         var targetWords = this.translation;
 
-        var attention = this.attention;
+        var attention = this.attention.slice();
 
         var rowsEnter = svg.selectAll(".row")
             .data(attention)
@@ -241,9 +243,9 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
         var svg = !d3.select("#translation-vis").empty() ?
             d3.select("#translation-vis") : d3.select("body").append("svg").attr("id", "sample");
-        var text = svg.append("text").text(text).style("font-size", "12px");
-        var width = text.node().getComputedTextLength();
-        text.remove();
+        var textSel: any = svg.append("text").text(text).style("font-size", "12px");
+        var width = textSel.node().getComputedTextLength();
+        textSel.remove();
         d3.select("#sample").remove();
         return width + 2;
     }
@@ -270,7 +272,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
     }
 
     isValidTranslation() {
-        return this.translation.length !== 0 && this.translation[this.translation.length - 1] === 'EOS';
+        return this.translation.length !== 0 && this.translation[this.translation.length - 1] === Constants.EOS;
     }
 
     lastMaxIndex(a) {
@@ -292,7 +294,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
         var barPadding = 1;
         var targetBarPadding = 1;
 
-        var attention = this.attention;
+        var attention = this.attention.slice();
 
         var sourceWords = source.split(" ");
         sourceWords.push("EOS")
@@ -316,8 +318,6 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
                 }
             }
         }
-        console.log(sourceWords.length - 1)
-        console.log(furthestRelevantSourceIndex)
 
         var xSourceValues = {0: 0};
         for (var i = 1; i < sourceWords.length; i++) {
@@ -353,7 +353,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
             width = w - margin.left - margin.right,
             height = 100 - margin.top - margin.bottom;
 
-        var attentionScale = d3.scalePow().domain([0, 1]).range([0, 5]);
+        var attentionScale: any = d3.scalePow().domain([0, 1]).range([0, 5]);
         attentionScale = function (x) {
             return 5 * Math.sqrt(x);
         }
@@ -372,8 +372,6 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
         var topY = 10;
         var bottomY = 70;
 
-        var sourceWords = source.split(" ");
-        sourceWords.push("EOS")
         var targetWords = translation.split(" ");
 
         svg.append('text').attr("y", topY).attr("x", -textWidth - 50).style("font-weight", "bold")
@@ -443,7 +441,6 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
             .style("text-anchor", "middle");
 
         var targetEnter = svg.append('g').selectAll('text').data(targetWords).enter();
-
 
         targetEnter.append("rect")
             .attr("x", function (d, i) {
@@ -527,7 +524,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
                 d3.select(this).attr('source-id', i + "");
                 d3.select(this).attr('target-id', j + "");
 
-                var pos = [{x: xSourceValues[i], y: topY + 5}, {x: xSourceValues[i], y: topY + 15},
+                var pos: any = [{x: xSourceValues[i], y: topY + 5}, {x: xSourceValues[i], y: topY + 15},
                     {
                         x: (xTargetValues[j] + xSourceValues[i]) / 2,
                         y: (topY + bottomY - 15) / 2
@@ -620,6 +617,13 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
     onTranslationEdit($event) {
         this.editedTranslation = this.encodeText($event);
+        if (this.editedTranslation[this.editedTranslation.length - 1] === " ") {
+
+            var prefix = (Constants.SOS + " " + this.editedTranslation.trim()).split(" ");
+            this.correctionMap = {};
+            this.correctionMap[prefix.slice(0, prefix.length - 1).join(" ")] = prefix[prefix.length - 1];
+            this.onCorrectionChange("");
+        }
     }
 
     onClick() {
@@ -700,19 +704,7 @@ export class BeamNodeDialog {
         this.shownValues = this.beamAttention.slice();
         this.sentenceView = data.sentenceView;
     }
-
-    attentionChange(event, i) {
-        var sum = 0;
-        for (var i = 0; i < this.shownValues.length; i++) {
-            sum += this.shownValues[i];
-        }
-        console.log("Sum " + sum);
-        for (var i = 0; i < this.shownValues.length; i++) {
-            this.beamAttention[i] = this.shownValues[i] / sum;
-        }
-
-    }
-
+    
     onKeyDown(event) {
         this.sentenceView.addEvent("keydown", event.key);
     }

@@ -4,4 +4,3 @@ export interface BeamNode {
     name: string;
     children?: BeamNode[];
 }
-
