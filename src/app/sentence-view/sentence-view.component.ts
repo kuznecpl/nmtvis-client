@@ -253,6 +253,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
     mouseoverTargetWord(i, attention) {
         var svg = d3.select("#translation-vis");
+        svg.selectAll("path").classed("fade-out", true);
         svg.selectAll("[target-id='" + i + "']")
             .classed("attention-selected", true);
 
@@ -355,7 +356,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
         var attentionScale: any = d3.scalePow().domain([0, 1]).range([0, 5]);
         attentionScale = function (x) {
-            return 5 * Math.sqrt(x);
+            return 3.2 * Math.sqrt(x);
         }
 
         // append the svg object to the body of the page
@@ -400,9 +401,12 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
                 return "source-word-box-" + i;
             })
             .on("mouseover", function (d, i) {
+                svg.selectAll("path")
+                    .classed("fade-out", true);
                 svg.selectAll("[source-id='" + i + "']")
                     .classed("attention-selected", true);
                 that.addEvent("source-hover", d);
+                svg.select("#source-word-text-" + i).style("font-weight", "bold");
                 for (var j = 0; j < attention.length; j++) {
 
                     svg.select("#target-word-box-" + j).style("opacity", Math.sqrt(attention[j][i]));
@@ -413,7 +417,9 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
                 }
             })
-            .on("mouseout", function (d) {
+            .on("mouseout", function (d, i) {
+                svg.selectAll(".fade-out").classed("fade-out", false);
+                svg.select("#source-word-text-" + i).style("font-weight", "normal");
                 that.addEvent("source-hover-out", d);
                 svg.selectAll('.attention-selected').classed("attention-selected", false);
                 svg.selectAll(".target-word-box").style("opacity", 1);
@@ -428,7 +434,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
             })
             .append("text")
             .attr("transform", function (d) {
-                var xScale = d.length <= maxTextLength ? 1 : maxTextLength / d.length;
+                var xScale = 1;
                 return "scale(" + xScale + ",1)"
             })
             .classed("source-word-text", true)
@@ -458,8 +464,11 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
                 return "target-word-box-" + i;
             })
             .on("mouseover", function (d, i) {
+                svg.selectAll("path")
+                    .classed("fade-out", true);
                 svg.selectAll("[target-id='" + i + "']")
                     .classed("attention-selected", true);
+                svg.select("#target-word-text-" + i).style("font-weight", "bold");
                 that.addEvent("target-hover", d);
 
                 for (var j = 0; j < attention[i].length; j++) {
@@ -472,7 +481,9 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
 
                 }
             })
-            .on("mouseout", function (d) {
+            .on("mouseout", function (d, i) {
+                svg.selectAll(".fade-out").classed("fade-out", false);
+                svg.select("#target-word-text-" + i).style("font-weight", "normal");
                 that.addEvent("target-hover-out", d);
                 svg.selectAll('.attention-selected').classed("attention-selected", false);
                 svg.selectAll(".source-word-box").style("opacity", 1);
@@ -487,7 +498,7 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
             })
             .append("text")
             .attr("transform", function (d) {
-                var xScale = d.length <= maxTextLength ? 1 : maxTextLength / d.length;
+                var xScale = 1;
                 return "scale(" + xScale + ",1)"
             })
             .classed("target-word-text", true)
@@ -495,6 +506,9 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
                 return "target-word-text-" + i;
             })
             .text(function (d) {
+                if (d === Constants.EOS) {
+                    return "EOS";
+                }
                 return that.decodeText(d);
             })
             .style("text-anchor", "middle");
@@ -544,10 +558,10 @@ export class SentenceViewComponent implements OnInit, AfterContentInit {
                     });
                 return line(pos);
             })
-            .attr("stroke-width", function (d) {
+            .style("stroke-width", function (d) {
                 return attentionScale(d) + "px";
             })
-            .attr("visibility", function (d, i) {
+            .style("visibility", function (d, i) {
                 return d < that.ATTENTION_THRESHOLD ? "hidden" : "visible";
             });
     }
@@ -704,7 +718,7 @@ export class BeamNodeDialog {
         this.shownValues = this.beamAttention.slice();
         this.sentenceView = data.sentenceView;
     }
-    
+
     onKeyDown(event) {
         this.sentenceView.addEvent("keydown", event.key);
     }

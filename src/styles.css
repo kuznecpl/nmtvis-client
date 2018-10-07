@@ -117,7 +117,7 @@ ins {
 .golden-link {
     fill: none;
     stroke: #ffcc00;
-    stroke-width: 2px;
+    stroke-width: 3px;
 }
 
 .focus-link {
@@ -157,8 +157,13 @@ circle:hover {
     opacity: 0.7;
 }
 
+.fade-out {
+    opacity: 0.2;
+}
+
 .attention-selected {
     stroke: orange;
+    opacity: 1;
 }
 
 .source-word-box {

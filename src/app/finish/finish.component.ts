@@ -28,6 +28,9 @@ export class FinishComponent implements OnInit {
         var questionResults = {};
 
         for (let result of results) {
+            if (Object.keys(result).length < 21) {
+                continue;
+            }
             for (let question of Object.keys(result)) {
                 if (!(question in questionResults)) {
                     questionResults[question] = [];

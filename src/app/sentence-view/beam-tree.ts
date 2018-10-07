@@ -86,6 +86,7 @@ export class BeamTree {
             domain.push(i);
         }
         domain = [-3, -2, -0.5, -0.05, -0.005, -0.0005];
+        var redBlue = ['#d7191c', '#fdae61', '#ffffbf', '#abd9e9', '#2c7bb6'].reverse();
         this.colorScale = d3.scaleLinear().domain(domain).range(this.colors).clamp(true);
         this.buildColorLegend();
 
@@ -565,6 +566,13 @@ export class BeamTree {
         }
     }
 
+    padPunctuation(s) {
+        // Spaces around special characters and trim
+        s = s.replace(/(!|\?|;|\.|,|;|:|"|'|\(|\))/g, " $1 ").trim()
+        s = s.replace(/\s{2,}/g, " ")
+        return s;
+    }
+
     addToCorrectionMap(correction, partial) {
         /*var words = correction.split(" ");
 
@@ -573,7 +581,7 @@ export class BeamTree {
          this.that.correctionMap[currPartial] = words[i];
          }*/
         this.that.correctionMap = {};
-        this.that.correctionMap[partial] = this.that.encodeText(correction);
+        this.that.correctionMap[partial] = this.that.encodeText(this.padPunctuation(correction));
     }
 
     getBeamNode(node, path) {
@@ -581,7 +589,7 @@ export class BeamTree {
             return node;
         }
         for (var i = 0; i < node.children.length; i++) {
-            if (node.children[i].name === path[0]) {
+            if ((node.children[i].isEdit && path[0] === "<EDIT>") || node.children[i].name === path[0]) {
                 return this.getBeamNode(node.children[i], path.slice(1));
             }
         }
@@ -957,7 +965,11 @@ export class BeamTree {
         var path = [];
 
         while (d) {
-            path.push(d.data.name);
+            if (d.data.isEdit) {
+                path.push("<EDIT>")
+            } else {
+                path.push(d.data.name);
+            }
             d = d.parent;
         }
 

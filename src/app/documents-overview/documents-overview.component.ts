@@ -223,10 +223,15 @@ export class DocumentsOverviewComponent implements OnInit, AfterViewInit {
         }
     }
 
+    loadShowFlagged() {
+        if (this.selectedDocument && localStorage.getItem(this.selectedDocument.id + "-showFlagged") !== null) {
+            this.showFlagged = localStorage.getItem(this.selectedDocument.id + "-showFlagged") === 'true' ? true : false;
+        }
+    }
+
     loadTopics() {
         if (this.selectedDocument && localStorage.getItem(this.selectedDocument.id + "-topics") !== null) {
             this.topics = JSON.parse(localStorage.getItem(this.selectedDocument.id + "-topics"));
-            console.log("Loaded topics")
         }
     }
 
@@ -254,6 +259,9 @@ export class DocumentsOverviewComponent implements OnInit, AfterViewInit {
     ngOnDestroy() {
         localStorage.setItem("sortMetric", this.currentSortMetric);
         localStorage.setItem("sortAscending", "" + this.currentSortAscending);
+        if (this.selectedDocument) {
+            localStorage.setItem(this.selectedDocument.id + "-showFlagged", "" + this.showFlagged);
+        }
         if (this.selectedSentence) {
             localStorage.setItem(this.selectedDocument.id + "-selectedSentenceId", "" + this.selectedSentence.id);
         }
@@ -287,7 +295,7 @@ export class DocumentsOverviewComponent implements OnInit, AfterViewInit {
                         if (this.documents.length > 0) {
                             this.loadSortSettings();
                             this.onClick(this.documents[0], () => {
-
+                                this.loadShowFlagged();
                                 this.loadTopics();
                                 setTimeout(function () {
                                     that.scrollToLastSelectedSentence();
@@ -311,7 +319,7 @@ export class DocumentsOverviewComponent implements OnInit, AfterViewInit {
                         if (this.documents[i].id === this.documentId) {
                             this.loadSortSettings();
                             this.onClick(this.documents[i], () => {
-
+                                this.loadShowFlagged();
                                 this.loadTopics();
                                 setTimeout(function () {
                                     that.scrollToLastSelectedSentence();
@@ -473,6 +481,11 @@ export class DocumentsOverviewComponent implements OnInit, AfterViewInit {
     }
 
     onShowCorrected() {
+        this.computeTopicOccurrences();
+    }
+
+    onShowFlagged(event) {
+        this.computeTopicOccurrences();
     }
 
 

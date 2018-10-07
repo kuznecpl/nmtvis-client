@@ -43,11 +43,11 @@ export class StartExperimentComponent implements OnInit {
                         hasOther: true,
                         choices: [
                             {
-                                value: "ims",
+                                value: "ims_real",
                                 text: "IMS"
                             },
                             {
-                                value: "ims",
+                                value: "vis",
                                 text: "VIS/VISUS"
                             },
                             {
@@ -360,8 +360,7 @@ export class StartExperimentComponent implements OnInit {
         this.survey.requiredText = "";
         this.survey.sendResultOnPageNext = true;
         this.survey.showCompletedPage = true;
-        this.survey.completedHtml = "<span>Thank you for completing the survey!<br>" +
-            "You can now start the user study by clicking below</span>";
+        this.survey.completedHtml = "<span>Thank you for completing the survey!</span>";
         this.survey.onPartialSend.add(result => {
             this.cacheSurveyData();
             this.experimentService.sendSurveyData(result.data)
