@@ -1,5 +1,7 @@
-# DnnVis
-
+# NMTVis
+![NMTVis](src/assets/nmtvis-screenshot.png)
+NMTVis is a visual analytics system for Neural Machine Translation (NMT) supporting translators through interactive post-editing.
+It was developed as part of my master thesis as a collaboration of the Institute of Natural Language Processing and Institute for Visualization and Interactive Systems of the University of Stuttgart.
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.7.4.
 
 ## Development server
