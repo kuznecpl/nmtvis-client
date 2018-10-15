@@ -4,6 +4,9 @@ NMTVis is a visual analytics system for Neural Machine Translation (NMT) support
 It was developed as part of my master thesis as a collaboration of the Institute of Natural Language Processing and Institute for Visualization and Interactive Systems of the University of Stuttgart.
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.7.4.
 
+A demo version can be found [here](http:/nmtvis.paul-kuznecov.de/register).
+The [NMT Model](https://github.com/kuznecpl/nmtvis-model) and [Server](https://github.com/kuznecpl/nmtvis-server) are separate repositories.
+
 ## Development server
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
